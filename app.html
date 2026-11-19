@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sprynt</title>
+  <meta name="description" content="Sprynt – zadania, listy, tablice, kalendarz i dokumenty w jednym miejscu." />
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <script src="js/theme.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // Logowanie i aplikacja to jeden plik: niektóre przeglądarki (np. Firefox z izolacją plików)
+    // trzymają osobną pamięć dla każdego pliku file://, więc przekierowania między stronami gubiłyby sesję.
+    window.SP_SIGNED_IN = !!SPAuth.current();
+    document.write('<link rel="stylesheet" href="css/' + (SP_SIGNED_IN ? "app" : "auth") + '.css" />' +
+      (SP_SIGNED_IN ? "" : "<style>.app, .pal-bg, .toast { display: none !important; }</style>"));
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Nawigacja">
+      <div class="side-top">
+        <button class="ws-switch" id="wsBtn" aria-haspopup="true">
+          <img class="ws-logo" src="img/logo.svg" alt="" />
+          <span class="ws-name">Sprynt</span>
+          <span class="ws-caret" data-icon="chevron-down" data-size="14"></span>
+        </button>
+      </div>
+
+      <div class="side-scroll">
+        <nav class="side-nav">
+          <a class="side-item" href="index.html" title="Strona Sprynt"><span data-icon="arrow-right" data-size="18" style="transform:scaleX(-1)"></span><span>Strona Sprynt</span></a>
+          <a class="side-item" href="#/home" data-route="home"><span data-icon="house" data-size="18"></span><span>Strona główna</span></a>
+          <a class="side-item" href="#/inbox" data-route="inbox"><span data-icon="inbox" data-size="18"></span><span>Skrzynka</span><span class="si-count" id="inboxCount" hidden></span></a>
+          <a class="side-item" href="#/chat" data-route="chat"><span data-icon="message-square" data-size="18"></span><span>Czat</span></a>
+          <a class="side-item" href="#/my-tasks" data-route="my-tasks"><span data-icon="list-checks" data-size="18"></span><span>Moje zadania</span></a>
+          <a class="side-item" href="#/dashboard" data-route="dashboard"><span data-icon="chart-column" data-size="18"></span><span>Pulpit</span></a>
+          <a class="side-item" href="#/docs" data-route="docs"><span data-icon="file-text" data-size="18"></span><span>Dokumenty</span></a>
+          <a class="side-item" href="#/whiteboards" data-route="whiteboards"><span data-icon="presentation" data-size="18"></span><span>Tablice online</span></a>
+          <a class="side-item" href="#/goals" data-route="goals"><span data-icon="target" data-size="18"></span><span>Cele</span></a>
+          <a class="side-item" href="#/automations" data-route="automations"><span data-icon="zap" data-size="18"></span><span>Automatyzacje</span></a>
+          <a class="side-item" href="#/cloud" data-route="cloud"><span data-icon="cloud" data-size="18"></span><span>Chmura</span></a>
+        </nav>
+
+        <div class="side-section" id="favSection" hidden>
+          <div class="side-h">Ulubione</div>
+          <ul class="tree" id="favList"></ul>
+        </div>
+
+        <div class="side-section">
+          <div class="side-h">Przestrzenie
+            <button class="side-add" id="addSpaceBtn" title="Nowa przestrzeń" aria-label="Nowa przestrzeń"><span data-icon="plus" data-size="14"></span></button>
+          </div>
+          <ul class="tree" id="spaceList"></ul>
+        </div>
+      </div>
+
+      <a class="storage" href="#/cloud" id="storageWidget" title="Miejsce w chmurze">
+        <span class="st-row"><span data-icon="cloud" data-size="15"></span><span id="storageLbl">Chmura</span></span>
+        <span class="st-bar"><i id="storageBar"></i></span>
+      </a>
+      <div class="side-foot">
+        <button class="invite" id="inviteBtn"><span data-icon="users" data-size="17"></span>Zaproś</button>
+        <a class="ibtn" href="#/trash" data-route="trash" title="Kosz (G, B)" aria-label="Kosz"><span data-icon="trash" data-size="17"></span></a>
+        <a class="ibtn" href="#/settings" title="Ustawienia (G, S)" aria-label="Ustawienia"><span data-icon="user-cog" data-size="17"></span></a>
+      </div>
+    </aside>
+    <div class="scrim" id="navScrim"></div>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="ibtn nav-btn" id="navBtn" aria-label="Menu"><span data-icon="menu" data-size="18"></span></button>
+        <ol class="crumbs" id="crumbs"></ol>
+        <button class="search" id="searchBtn" aria-haspopup="dialog">
+          <span data-icon="search" data-size="15"></span>
+          <span class="search-lbl">Szukaj</span>
+          <kbd id="kbdHint">⌘K</kbd>
+        </button>
+        <div class="top-actions">
+          <button class="timer-pill" id="timerPill" hidden></button>
+          <button class="btn primary sm" id="newBtn" aria-haspopup="true"><span data-icon="plus" data-size="15"></span><span class="lbl">Nowe</span></button>
+          <button class="ibtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw"></button>
+          <button class="ibtn" id="notifBtn" aria-label="Skrzynka"><span data-icon="bell" data-size="18"></span><i class="ndot" id="notifDot" hidden></i></button>
+          <button class="av av-btn" id="meBtn" aria-label="Twoje konto" style="--c:#6c5ce7">TY</button>
+        </div>
+      </header>
+      <main class="content" id="view" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div class="pal-bg" id="palette" hidden>
+    <div class="pal" role="dialog" aria-modal="true" aria-label="Szukaj">
+      <div class="pal-in"><span data-icon="search" data-size="18"></span><input id="paletteInput" placeholder="Szukaj zadań, list, dokumentów…" autocomplete="off" /><kbd>Esc</kbd></div>
+      <div class="pal-list" id="paletteList" role="listbox"></div>
+      <div class="pal-foot"><span><kbd>↑</kbd><kbd>↓</kbd> wybór</span><span><kbd>↵</kbd> otwórz</span><span><kbd>T</kbd> nowe zadanie</span></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <template id="authTpl">
+  <div class="auth">
+    <section class="auth-side">
+      <header class="auth-top">
+        <a class="logo" href="index.html"><img class="logo-mark" src="img/logo.svg" alt="" />Sprynt</a>
+        <button class="icon-btn" id="themeBtn" aria-label="Przełącz motyw"></button>
+      </header>
+
+      <div class="card" id="card">
+        <h1 id="h">Witaj ponownie</h1>
+        <p class="sub" id="sub">Zaloguj się, żeby wrócić do swoich projektów.</p>
+
+        <div class="tabs" id="tabs" role="tablist">
+          <button role="tab" id="tabLogin" aria-selected="true">Logowanie</button>
+          <button role="tab" id="tabRegister" aria-selected="false">Załóż konto</button>
+          <i class="tabs-ink"></i>
+        </div>
+
+        <div class="error" id="err" role="alert" hidden></div>
+
+        <form id="form" novalidate>
+          <div class="field reg-only" hidden>
+            <label for="name">Imię</label>
+            <div class="input-ico"><span data-icon="user" data-size="17"></span><input id="name" name="name" autocomplete="given-name" placeholder="np. Ola" maxlength="60" /></div>
+          </div>
+          <div class="field">
+            <label for="email">E-mail</label>
+            <div class="input-ico"><span data-icon="mail" data-size="17"></span><input id="email" name="email" type="email" autocomplete="email" placeholder="ty@firma.pl" /></div>
+          </div>
+          <div class="field">
+            <label for="password">Hasło</label>
+            <div class="input-ico"><span data-icon="lock" data-size="17"></span>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+              <button type="button" class="eye" id="eye" aria-label="Pokaż hasło"></button>
+            </div>
+            <div class="hint reg-only" hidden>Co najmniej 8 znaków.</div>
+            <div class="meter reg-only" hidden aria-hidden="true"><i id="meter"></i></div>
+          </div>
+          <div class="field reg-only" hidden>
+            <label for="project">Nazwa pierwszego projektu</label>
+            <div class="input-ico"><span data-icon="folder" data-size="17"></span><input id="project" name="project" placeholder="Mój projekt" maxlength="60" /></div>
+            <div class="hint">Utworzymy pusty projekt z jedną listą zadań.</div>
+          </div>
+          <label class="check"><input type="checkbox" id="remember" checked /> Zapamiętaj mnie na tym urządzeniu</label>
+          <button class="submit" id="submit" type="submit"><span id="submitLbl">Zaloguj się</span><span data-icon="arrow-right" data-size="18"></span></button>
+        </form>
+
+        <p class="switch"><span id="switchTxt">Nie masz konta?</span> <a href="#register" id="switchLink">Załóż je za darmo</a></p>
+        <p class="note"><span data-icon="lock" data-size="14"></span>Konto i dane są zapisywane tylko w tej przeglądarce. Synchronizacja między urządzeniami pojawi się po podłączeniu serwera.</p>
+      </div>
+    </section>
+
+    <aside class="auth-art" aria-hidden="true">
+      <div class="art-glow"></div>
+      <div class="art-in">
+        <h2>Planuj spokojnie.<br />Dowoź na czas.</h2>
+        <p>Listy, tablice, kalendarz i dokumenty w jednym miejscu.</p>
+        <div class="art-cards">
+          <div class="ac ac1"><span class="dot" style="--c:#5b6cf9"></span>Roadmapa na Q1<span class="av" style="--c:#e84393">AK</span></div>
+          <div class="ac ac2"><span class="dot fill" style="--c:#1aae6f"></span><s>Specyfikacja ról</s><span class="av" style="--c:#00a884">MZ</span></div>
+          <div class="ac ac3"><span class="dot" style="--c:#f0a020"></span>Strona premiery<span class="flag">Pilny</span></div>
+          <div class="sticky s1">Sprint 15 ✨</div>
+          <div class="sticky s2">✓ Gotowe</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+  </template>
+
+  <script>
+    (function () {
+      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "app"] : ["icons", "login"];
+      if (!SP_SIGNED_IN) {
+        var app = document.querySelector(".app"); if (app) app.remove();
+        document.querySelectorAll(".pal-bg, .toast").forEach(function (e) { e.remove(); });
+        document.body.appendChild(document.getElementById("authTpl").content.cloneNode(true));
+      }
+      files.forEach(function (f) { var s = document.createElement("script"); s.src = "js/" + f + ".js"; s.async = false; document.body.appendChild(s); });
+    })();
+  </script>
+</body>
+</html>

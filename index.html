@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sprynt – cała praca zespołu w jednym miejscu</title>
+  <meta name="description" content="Sprynt łączy zadania, listy, tablice, kalendarz i dokumenty w jednej szybkiej przestrzeni roboczej. Za darmo, w przeglądarce." />
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <script src="js/theme.js"></script>
+  <script src="js/auth.js"></script>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <!-- ============ NAWIGACJA ============ -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-in">
+      <a class="logo" href="#top" aria-label="Sprynt – strona główna"><img class="logo-mark" src="img/logo.svg" alt="" />Sprynt</a>
+      <nav class="nav-links" aria-label="Sekcje">
+        <a href="#funkcje">Funkcje</a>
+        <a href="#widoki">Widoki</a>
+        <a href="#cennik">Cennik</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-acts">
+        <button class="icon-btn" id="themeBtn" aria-label="Przełącz motyw"></button>
+        <a class="btn soft" href="app.html#login" data-auth="login">Zaloguj się</a>
+        <a class="btn dark" href="app.html#register" data-auth="cta">Zacznij za darmo</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="pulse"></span>Nowość: tablice online, cele i automatyzacje</p>
+        <h1 class="hero-h" aria-label="Cała praca zespołu. Jedno szybkie miejsce.">
+          <span class="line"><span class="w">Cała</span> <span class="w">praca</span> <span class="w">zespołu.</span></span>
+          <span class="line"><span class="w grad">Jedno</span> <span class="w grad">szybkie</span> <span class="w grad">miejsce.</span></span>
+        </h1>
+        <p class="hero-p reveal" style="--d:.35s">Zadania, listy, tablice, kalendarz i dokumenty w jednej przestrzeni roboczej. Planuj sprinty, pilnuj terminów i rozmawiaj o pracy tam, gdzie ona się dzieje.</p>
+        <div class="hero-cta reveal" style="--d:.45s">
+          <a class="btn dark lg" href="app.html#register" data-auth="cta">Zacznij za darmo <span data-icon="arrow-right" data-size="18"></span></a>
+          <a class="btn soft lg" href="app.html#login" data-auth="login">Mam już konto</a>
+          <p class="hero-note">Za darmo na zawsze.<br />Bez karty płatniczej.</p>
+        </div>
+      </div>
+
+      <!-- Animowany podgląd aplikacji -->
+      <div class="wrap">
+        <div class="stage reveal" style="--d:.55s" id="stage">
+          <div class="mock" id="mock" aria-label="Podgląd aplikacji Sprynt" role="img">
+            <div class="mock-top">
+              <span class="dots"><i></i><i></i><i></i></span>
+              <span class="mock-crumb"><span class="sq" style="--c:#00a884">I</span>Inżynieria <em>/</em> Sprinty <em>/</em> <b>Sprint 14</b></span>
+            </div>
+            <div class="mock-tabs">
+              <span class="mtab" data-scene="list"><span data-icon="list" data-size="15"></span>Lista</span>
+              <span class="mtab" data-scene="board"><span data-icon="kanban" data-size="15"></span>Tablica</span>
+              <span class="mtab" data-scene="calendar"><span data-icon="calendar" data-size="15"></span>Kalendarz</span>
+              <span class="mtab-ink" id="mtabInk"></span>
+            </div>
+            <div class="mock-body" id="mockBody"></div>
+            <div class="cursor" id="cursor" aria-hidden="true"><svg width="22" height="24" viewBox="0 0 22 24"><path d="M2 2l7 19 3-8 8-3z" fill="#6c5ce7" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Anna</span></div>
+          </div>
+          <div class="float f1" id="floatComment"><span class="av" style="--c:#e84393">AK</span><div><b>Anna Kowal</b><span>Czy wspieramy też tabelki? 👀</span></div></div>
+          <div class="float f2" id="floatDone"><span class="ok-ico" data-icon="check" data-size="16"></span><div><b>Ukończono SP-7</b><span>Migracja bazy do PostgreSQL 16</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PASEK FUNKCJI ============ -->
+    <section class="marquee" aria-label="Możliwości">
+      <div class="marquee-track" id="marquee"></div>
+    </section>
+
+    <!-- ============ FUNKCJE ============ -->
+    <section class="sec" id="funkcje">
+      <div class="wrap">
+        <p class="kicker reveal">Funkcje</p>
+        <h2 class="sec-h reveal">Wszystko, czego zespół potrzebuje,<br />bez przeskakiwania między aplikacjami</h2>
+        <div class="features" id="features"></div>
+      </div>
+    </section>
+
+    <!-- ============ WIDOKI (przewijana prezentacja) ============ -->
+    <section class="sec views" id="widoki">
+      <div class="wrap views-in">
+        <div class="views-text">
+          <p class="kicker reveal">Widoki</p>
+          <h2 class="sec-h reveal">Te same zadania.<br />Widok, jakiego potrzebujesz.</h2>
+          <ol class="steps" id="steps">
+            <li data-scene="list"><b>Lista</b><span>Grupuj po statusie, priorytecie albo osobie. Edytuj termin, priorytet i przypisanie bez otwierania zadania.</span></li>
+            <li data-scene="board"><b>Tablica</b><span>Przeciągaj karty między kolumnami statusów i od razu widź, co utknęło.</span></li>
+            <li data-scene="calendar"><b>Kalendarz</b><span>Przesuwaj terminy jednym ruchem i planuj tydzień z wyprzedzeniem.</span></li>
+            <li data-scene="doc"><b>Dokumenty</b><span>Specyfikacje i notatki obok zadań, z nagłówkami, listami i formatowaniem.</span></li>
+          </ol>
+        </div>
+        <div class="views-sticky">
+          <div class="mock mini" id="mock2"><div class="mock-body" id="mockBody2"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ JAK ZACZĄĆ ============ -->
+    <section class="sec">
+      <div class="wrap">
+        <p class="kicker reveal">Start w minutę</p>
+        <h2 class="sec-h reveal">Trzy kroki do pierwszego sprintu</h2>
+        <div class="how">
+          <div class="how-line" aria-hidden="true"><i id="howLine"></i></div>
+          <div class="how-step reveal"><span class="how-n">1</span><h3>Utwórz przestrzeń</h3><p>Dział, projekt albo klient – każdy ma swoją przestrzeń z folderami i listami.</p></div>
+          <div class="how-step reveal" style="--d:.12s"><span class="how-n">2</span><h3>Dodaj zadania</h3><p>Naciśnij <kbd>T</kbd>, wpisz nazwę i Enter. Termin, priorytet i osoby dodasz jednym kliknięciem.</p></div>
+          <div class="how-step reveal" style="--d:.24s"><span class="how-n">3</span><h3>Pracujcie razem</h3><p>Komentarze, podzadania i checklisty w zadaniu. Powiadomienia trafiają do Skrzynki.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CENNIK ============ -->
+    <section class="sec" id="cennik">
+      <div class="wrap">
+        <p class="kicker reveal">Cennik</p>
+        <h2 class="sec-h reveal">Zacznij za darmo. Rośnij, kiedy chcesz.</h2>
+        <div class="billing reveal" role="group" aria-label="Okres rozliczeniowy">
+          <button data-bill="m" aria-pressed="false">Miesięcznie</button>
+          <button data-bill="y" aria-pressed="true">Rocznie <span class="save">−20%</span></button>
+          <i class="billing-ink"></i>
+        </div>
+        <div class="plans">
+          <article class="plan reveal">
+            <h3>Free</h3><p class="plan-d">Dla osób i małych zespołów na start.</p>
+            <div class="price"><span class="amt" data-m="0" data-y="0">0</span><span class="cur">zł</span><span class="per">na zawsze</span></div>
+            <a class="btn soft full" href="app.html#register" data-auth="cta">Zacznij za darmo</a>
+            <ul><li>Nielimitowane zadania</li><li>Lista, Tablica, Tabela, Kalendarz, Oś czasu</li><li>Śledzenie czasu i pulpit z wykresami</li><li>Tablice online, cele i automatyzacje</li><li>Czat, pola niestandardowe, szablony</li><li>Dokumenty</li><li>100 MB w chmurze na pliki</li><li>Do 5 członków</li></ul>
+          </article>
+          <article class="plan featured reveal" style="--d:.1s">
+            <span class="ribbon">Najczęściej wybierany</span>
+            <h3>Pro</h3><p class="plan-d">Dla zespołów, które planują sprinty.</p>
+            <div class="price"><span class="amt" data-m="29" data-y="24">24</span><span class="cur">zł</span><span class="per">/ osoba / mies.</span></div>
+            <a class="btn brand full" href="app.html#register" data-auth="cta">Wypróbuj Pro</a>
+            <ul><li>Wszystko z Free</li><li>100 GB w chmurze</li><li>Nielimitowani członkowie</li><li>Własne statusy na listę</li><li>Raporty czasu pracy</li><li>Goście na tablicach online</li></ul>
+          </article>
+          <article class="plan reveal" style="--d:.2s">
+            <h3>Zespół</h3><p class="plan-d">Dla firm z wieloma działami.</p>
+            <div class="price"><span class="amt" data-m="49" data-y="39">39</span><span class="cur">zł</span><span class="per">/ osoba / mies.</span></div>
+            <a class="btn soft full" href="app.html#register" data-auth="cta">Porozmawiajmy</a>
+            <ul><li>Wszystko z Pro</li><li>1 TB w chmurze</li><li>Role i uprawnienia</li><li>Automatyzacje z webhookami</li><li>SSO i dziennik audytu</li><li>Priorytetowe wsparcie</li></ul>
+          </article>
+        </div>
+        <p class="plans-note reveal">Ceny netto. Funkcje planów Pro i Zespół są w przygotowaniu. Konto i dane są na razie zapisywane lokalnie w Twojej przeglądarce.</p>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="sec" id="faq">
+      <div class="wrap narrow">
+        <p class="kicker reveal">FAQ</p>
+        <h2 class="sec-h reveal">Częste pytania</h2>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="sec">
+      <div class="wrap">
+        <div class="cta reveal">
+          <div class="cta-glow" aria-hidden="true"></div>
+          <div class="cta-notes" aria-hidden="true"><span class="n n1">Sprint 15 ✨</span><span class="n n2">Termin: piątek</span><span class="n n3">✓ Gotowe</span></div>
+          <h2>Twój zespół zasługuje na spokojniejszy tydzień.</h2>
+          <p>Załóż przestrzeń w minutę. Bez instalacji, bez karty.</p>
+          <a class="btn light lg" href="app.html#register" data-auth="cta">Zacznij za darmo <span data-icon="arrow-right" data-size="18"></span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <a class="logo" href="#top"><img class="logo-mark" src="img/logo.svg" alt="" />Sprynt</a>
+      <nav aria-label="Stopka"><a href="#funkcje">Funkcje</a><a href="#widoki">Widoki</a><a href="#cennik">Cennik</a><a href="#faq">FAQ</a><a href="app.html#login" data-auth="login">Zaloguj się</a></nav>
+      <p class="muted">© 2026 Sprynt</p>
+    </div>
+  </footer>
+
+  <script src="js/icons.js"></script>
+  <script src="js/landing.js"></script>
+</body>
+</html>
