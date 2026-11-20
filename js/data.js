@@ -9,7 +9,7 @@
   var user = window.SPAuth && SPAuth.current();
   if (!user) return;
   SP.user = user;
-  var KEY = "sprynt:db:" + user.id;
+  var KEY = "sprynt:db:" + user.id, AI_KEY = "sprynt:ai:" + user.id, SYNC_KEY = "sprynt:sync:" + user.id;
   var VERSION = 1;
 
   var uid = function (p) { return (p || "") + Math.random().toString(36).slice(2, 9); };
@@ -51,6 +51,7 @@
     clearTimeout(saveT);
     saveT = setTimeout(function () {
       try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { SP.toast && SP.toast("Nie udało się zapisać – brak miejsca w przeglądarce"); }
+      if (SP.cloudDirty) SP.cloudDirty();
     }, 120);
   }
   data = load();
@@ -303,7 +304,115 @@
       w.people[0] = Object.assign({}, w.people[0], { id: "me", name: user.name, email: user.email });
       data = w; changed("all");
     },
-    wipe: function () { try { localStorage.removeItem(KEY); } catch (e) {} },
+    wipe: function () { try { localStorage.removeItem(KEY); localStorage.removeItem(AI_KEY); localStorage.removeItem(SYNC_KEY); } catch (e) {} },
+
+    /* ---- Synchronizacja z chmurą (js/cloud.js) ---- */
+    syncMeta: function () { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || { rev: 0, dirty: false }; } catch (e) { return { rev: 0, dirty: false }; } },
+    saveSyncMeta: function (m) { try { localStorage.setItem(SYNC_KEY, JSON.stringify(m)); } catch (e) {} },
+    /** Zastępuje cały stan (np. nowszą wersją z chmury) bez oznaczania go jako „do wysłania”. */
+    replaceData: function (d) {
+      if (!d || !Array.isArray(d.spaces)) return;
+      d.version = VERSION;
+      ["files", "goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "tags", "notifications", "docs", "favorites", "recents", "folders", "lists", "tasks", "people"].forEach(function (k) { if (!Array.isArray(d[k])) d[k] = []; });
+      d.ui = d.ui || { expanded: {}, views: {} };
+      if (!d.people.some(function (p) { return p.id === "me"; })) d.people.unshift({ id: "me", name: user.name, email: user.email, color: "#6c5ce7" });
+      data = d;
+      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+      listeners.forEach(function (fn) { fn("all"); });
+    },
+    /** Dane konta lokalnego z tym samym e-mailem (do przeniesienia do chmury przy pierwszym logowaniu). */
+    legacyLocalData: function () {
+      try {
+        var acc = (JSON.parse(localStorage.getItem("sprynt:accounts")) || []).find(function (a) { return a.email === String(user.email || "").toLowerCase(); });
+        var d = acc && JSON.parse(localStorage.getItem("sprynt:db:" + acc.id));
+        return d && Array.isArray(d.tasks) ? d : null;
+      } catch (e) { return null; }
+    },
+    isEmpty: function () { return !data.tasks.length && !data.docs.length && data.spaces.length <= 1 && data.lists.length <= 1; },
+
+    /* ---- Ustawienia AI (osobny klucz – klucz API nie trafia do kopii zapasowej ani eksportu) ---- */
+    aiSettings: function () { try { return JSON.parse(localStorage.getItem(AI_KEY)) || {}; } catch (e) { return {}; } },
+    saveAiSettings: function (s) { try { if (s) localStorage.setItem(AI_KEY, JSON.stringify(s)); else localStorage.removeItem(AI_KEY); } catch (e) {} changed("ai"); },
+
+    /* ---- Zaproszenia ---- */
+    markInvited: function (personId, via, link) {
+      var p = byId(data.people, personId); if (!p) return;
+      p.invites = (p.invites || []).concat([{ via: via, at: new Date().toISOString() }]).slice(-10);
+      p.inviteLink = link || p.inviteLink; changed("people");
+    },
+    removePerson: function (id) {
+      if (id === "me") return;
+      data.people = data.people.filter(function (p) { return p.id !== id; });
+      data.tasks.forEach(function (t) { t.assignees = t.assignees.filter(function (a) { return a !== id; }); });
+      changed("people");
+    },
+    /** Kopia przestrzeni do zaproszenia (bez historii, czasu pracy i plików). */
+    shareSnapshot: function (spaceIds) {
+      var set = new Set(spaceIds), lists = data.lists.filter(function (l) { return set.has(l.spaceId); }), lset = new Set(lists.map(function (l) { return l.id; }));
+      var tasks = data.tasks.filter(function (t) { return lset.has(t.listId); }).map(function (t) {
+        return { id: t.id, parentId: t.parentId, listId: t.listId, title: t.title, status: t.status, priority: t.priority, assignees: t.assignees, due: t.due, start: t.start, tags: t.tags, desc: t.desc, checklist: t.checklist, cf: t.cf, recur: t.recur };
+      });
+      return {
+        spaces: data.spaces.filter(function (s) { return set.has(s.id); }).map(function (s) { return { id: s.id, name: s.name, color: s.color }; }),
+        folders: data.folders.filter(function (f) { return set.has(f.spaceId); }), lists: lists, tasks: tasks,
+        fields: data.fields.filter(function (f) { return lset.has(f.listId); }),
+        docs: data.docs.filter(function (d) { return set.has(d.spaceId); }).map(function (d) { return { id: d.id, spaceId: d.spaceId, title: d.title, body: d.body }; }),
+        people: data.people.map(function (p) { return { id: p.id, name: p.id === "me" ? user.name : p.name, email: p.id === "me" ? user.email : p.email, color: p.color }; }),
+        tags: data.tags,
+      };
+    },
+    /** Wczytuje udostępnioną przestrzeń z zaproszenia. Ten sam nadawca + przestrzeń = aktualizacja zamiast duplikatu. */
+    importShared: function (inv) {
+      var snap = inv.snapshot || {}, from = inv.from || {}, idMap = {}, nid = function (old, p) { return idMap[old] || (idMap[old] = uid(p)); };
+      var meEmail = String(inv.to && inv.to.email || user.email || "").toLowerCase();
+      // osoby: zapraszający i reszta zespołu; adresat = „me”
+      (snap.people || []).forEach(function (p) {
+        var em = String(p.email || "").toLowerCase();
+        if ((em && em === meEmail) || (!em && inv.to && inv.to.name && p.name === inv.to.name)) { idMap[p.id] = "me"; return; }
+        var ex = data.people.find(function (q) { return (em && String(q.email || "").toLowerCase() === em) || q.name === p.name; });
+        if (ex) { idMap[p.id] = ex.id; return; }
+        var np = { id: uid("p"), name: p.name, email: p.email || "", color: p.color || "#0984e3" };
+        data.people.push(np); idMap[p.id] = np.id;
+      });
+      var summary = { spaces: 0, tasks: 0, updated: false };
+      (snap.spaces || []).forEach(function (s) {
+        var shareKey = (from.email || from.name || "?") + "|" + s.id;
+        var existing = data.spaces.find(function (x) { return x.shared && x.shared.key === shareKey; });
+        if (existing) {
+          // aktualizacja: usuń starą zawartość tej przestrzeni i wczytaj nową
+          var oldLists = new Set(data.lists.filter(function (l) { return l.spaceId === existing.id; }).map(function (l) { return l.id; }));
+          data.tasks = data.tasks.filter(function (t) { return !oldLists.has(t.listId); });
+          data.lists = data.lists.filter(function (l) { return !oldLists.has(l.id); });
+          data.folders = data.folders.filter(function (f) { return f.spaceId !== existing.id; });
+          data.fields = data.fields.filter(function (f) { return !oldLists.has(f.listId); });
+          idMap[s.id] = existing.id; existing.name = s.name; existing.shared.at = new Date().toISOString(); summary.updated = true;
+        } else {
+          data.spaces.push({ id: nid(s.id, "sp-"), name: s.name, color: s.color || "#6c5ce7", shared: { key: shareKey, from: from.name || from.email, at: new Date().toISOString() } });
+          data.ui.expanded[idMap[s.id]] = true;
+        }
+        summary.spaces++;
+      });
+      (snap.folders || []).forEach(function (f) { data.folders.push({ id: nid(f.id, "fo-"), spaceId: idMap[f.spaceId], name: f.name }); });
+      (snap.lists || []).forEach(function (l) { data.lists.push({ id: nid(l.id, "li-"), spaceId: idMap[l.spaceId], folderId: l.folderId ? idMap[l.folderId] || null : null, name: l.name }); });
+      (snap.fields || []).forEach(function (f) { data.fields.push(Object.assign({}, f, { id: nid(f.id, "cf"), listId: idMap[f.listId] })); });
+      (snap.tags || []).forEach(function (tg) { if (!SP.db.tag(tg.name)) data.tags.push(tg); });
+      var num = data.tasks.reduce(function (m, t) { return Math.max(m, t.num); }, 0), now = new Date().toISOString();
+      var order = (snap.tasks || []).filter(function (t) { return !t.parentId; }).concat((snap.tasks || []).filter(function (t) { return t.parentId; }));
+      order.forEach(function (t) {
+        if (!idMap[t.listId]) return;
+        var cf = {}; Object.keys(t.cf || {}).forEach(function (k) { if (idMap[k]) cf[idMap[k]] = t.cf[k]; });
+        data.tasks.push({ id: nid(t.id, "t"), num: ++num, parentId: t.parentId ? idMap[t.parentId] || null : null, listId: idMap[t.listId], title: t.title, status: t.status || "todo", priority: t.priority || null,
+          assignees: (t.assignees || []).map(function (a) { return idMap[a]; }).filter(Boolean), due: t.due || null, start: t.start || null, tags: t.tags || [], desc: t.desc || "",
+          checklist: t.checklist || [], comments: [], time: [], recur: t.recur || null, cf: cf, deps: [], remind: null, createdAt: now, updatedAt: now,
+          activity: [{ by: "me", text: "dołączył(a) z zaproszenia od " + (from.name || from.email || "znajomego"), at: now }] });
+        summary.tasks++;
+      });
+      (snap.docs || []).forEach(function (d) { if (idMap[d.spaceId]) data.docs.unshift({ id: nid(d.id, "d"), spaceId: idMap[d.spaceId], title: d.title, body: d.body, updatedAt: now, by: "me" }); });
+      data.notifications.unshift({ id: uid("n"), taskId: null, by: "me", text: (summary.updated ? "zaktualizowano udostępnioną przestrzeń od " : "dołączono do przestrzeni od ") + (from.name || from.email || "znajomego"), state: "important", at: now });
+      changed("all");
+      summary.spaceId = idMap[(snap.spaces || [])[0] && snap.spaces[0].id];
+      return summary;
+    },
     deleteTask: function (id) {
       var ids = new Set([id].concat(SP.db.subtasks(id).map(function (s) { return s.id; })));
       var tk = SP.db.task(id);

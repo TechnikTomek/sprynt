@@ -130,7 +130,8 @@
   }
   SP.taskProps = function (t) {
     var r = t.remind;
-    return '<div class="prop"><span class="prop-l">' + ico("alarm-clock", 15) + 'Przypomnienie</span><button class="prop-v" data-x="remind">' +
+    return '<div class="prop"><span class="prop-l">' + ico("target", 15) + 'Skupienie</span><button class="prop-v" data-x="focus">' + (SP.focus && SP.focus.taskId() === t.id ? '<span class="focus-on">' + ico("clock", 14) + "Trwa sesja</span>" : '<span class="focus-start">' + ico("play", 13) + "25 min skupienia</span>") + "</button></div>" +
+      '<div class="prop"><span class="prop-l">' + ico("alarm-clock", 15) + 'Przypomnienie</span><button class="prop-v" data-x="remind">' +
       (r ? '<span class="remind' + (t.reminded ? " done" : "") + '">' + ico("bell", 14) + fmtRemind(r) + (t.reminded ? " · wysłane" : "") + "</span>" : '<span class="muted">Puste</span>') + "</button></div>";
   };
   SP.taskFields = function (t) {
@@ -159,6 +160,7 @@
     main.querySelectorAll("[data-dep-del]").forEach(function (b) { b.onclick = function () { db.removeDep(taskId, b.dataset.depDel); }; });
     var x;
     if ((x = main.querySelector('[data-x="remind"]'))) x.onclick = function () { SP.pickReminder(x, taskId); };
+    var fx = main.querySelector('[data-x="focus"]'); if (fx) fx.onclick = function () { if (SP.focus.taskId() === taskId) SP.focus.stop(); else SP.focus.start(taskId); };
     if ((x = main.querySelector('[data-x="fields"]'))) { var fb = x; fb.onclick = function () { SP.manageFields(db.task(taskId).listId); }; }
     if ((x = main.querySelector('[data-x="dep-add"]'))) { var db2 = x; db2.onclick = function () { addDep(db2, taskId); }; }
   };
@@ -253,6 +255,91 @@
     a.href = url; a.download = (node.name || "zadania").replace(/[\\/:*?"<>|]+/g, "-") + " – zadania.csv";
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     SP.toast("Wyeksportowano " + tasks.length + " zadań do CSV");
+  };
+
+  /* =================== Eksport do kalendarza (.ics) =================== */
+  function icsText(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n"); }
+  function icsFold(line) { var out = [], u = line; while (u.length > 73) { out.push(u.slice(0, 73)); u = " " + u.slice(73); } out.push(u); return out.join("\r\n"); }
+  function icsDate(ymd) { return ymd.replace(/-/g, ""); }
+  SP.exportICS = function (type, id) {
+    var node = db[type](id); if (!node) return;
+    var tasks = db.tasksIn({ type: type, id: id }, { subtasks: true }).filter(function (t) { return t.due && !db.status(t.status).closed; });
+    if (!tasks.length) { SP.toast("Brak otwartych zadań z terminem do wyeksportowania"); return; }
+    var stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Sprynt//Zadania//PL", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + icsText("Sprynt – " + node.name)];
+    tasks.forEach(function (t) {
+      var start = t.start && t.start <= t.due ? t.start : t.due, who = t.assignees.map(function (a) { return (db.person(a) || {}).name; }).filter(Boolean).join(", ");
+      var desc = ["Status: " + db.status(t.status).name, t.priority ? "Priorytet: " + db.priority(t.priority).name : "", who ? "Osoby: " + who : "", "Lista: " + db.pathOf(t).list.name, t.desc ? String(t.desc).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : ""].filter(Boolean).join("\n");
+      lines.push("BEGIN:VEVENT", "UID:" + t.id + "@sprynt", "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + icsDate(start), "DTEND;VALUE=DATE:" + icsDate(SP.date.add(t.due, 1)),
+        icsFold("SUMMARY:" + icsText(db.taskKey(t) + " " + t.title)), icsFold("DESCRIPTION:" + icsText(desc)), "TRANSP:TRANSPARENT");
+      if (t.priority === "urgent" || t.priority === "high") lines.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(t.title), "TRIGGER:-PT15H", "END:VALARM");
+      lines.push("END:VEVENT");
+    });
+    lines.push("END:VCALENDAR");
+    var url = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" })), a = document.createElement("a");
+    a.href = url; a.download = (node.name || "Sprynt").replace(/[\\/:*?"<>|]+/g, "-") + ".ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    SP.toast("Wyeksportowano " + tasks.length + " terminów – otwórz plik w Kalendarzu Google, Apple albo Outlooku");
+  };
+
+  /* =================== Tryb skupienia (Pomodoro) =================== */
+  var F = null, fEl = null, fTick = null;
+  function beep(n) {
+    try {
+      var C = window.AudioContext || window.webkitAudioContext; if (!C) return; var ctx = new C();
+      for (var i = 0; i < (n || 3); i++) { var o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + i * 0.28; o.frequency.value = 880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22); o.start(t0); o.stop(t0 + 0.25); }
+      setTimeout(function () { ctx.close(); }, 1500);
+    } catch (e) {}
+  }
+  function notify(title, body) { if (window.Notification && Notification.permission === "granted") { try { new Notification(title, { body: body, icon: "img/icon-192.png" }); } catch (e) {} } }
+  function drawFocus() {
+    if (!F) { if (fEl) { fEl.remove(); fEl = null; } return; }
+    if (!fEl) {
+      fEl = SP.el('<div class="focus-w" role="status"><svg class="fw-ring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" class="fw-bg"/><circle cx="32" cy="32" r="28" class="fw-fg" transform="rotate(-90 32 32)"/></svg><div class="fw-b"><b class="fw-t"></b><span class="fw-n"></span><span class="fw-a"><button class="btn sm fw-plus" data-fw="plus">+5 min</button><button class="btn sm" data-fw="stop"></button></span></div></div>');
+      document.body.appendChild(fEl);
+      fEl.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-fw]"); if (!b) { if (F && F.taskId && db.task(F.taskId)) SP.openTask(F.taskId); return; }
+        if (b.dataset.fw === "plus") { F.end += 5 * 60000; F.total += 5 * 60000; drawFocus(); }
+        else if (b.dataset.fw === "stop") { if (F.phase === "done") SP.focus.start(F.taskId); else SP.focus.stop(); }
+        else if (b.dataset.fw === "break") { F = { phase: "break", taskId: F.taskId, end: Date.now() + 5 * 60000, total: 5 * 60000 }; drawFocus(); }
+      });
+    }
+    var left = Math.max(0, F.end - Date.now()), m = Math.floor(left / 60000), s = Math.floor(left % 60000 / 1000), t = db.task(F.taskId);
+    fEl.className = "focus-w " + F.phase;
+    fEl.querySelector(".fw-t").textContent = F.phase === "work" ? "Skupienie" : F.phase === "break" ? "Przerwa" : "Sesja ukończona 🎉";
+    fEl.querySelector(".fw-n").textContent = (F.phase === "done" ? "" : m + ":" + String(s).padStart(2, "0") + " · ") + (t ? t.title : "");
+    var c = 2 * Math.PI * 28, p = F.phase === "done" ? 1 : 1 - left / F.total;
+    fEl.querySelector(".fw-fg").setAttribute("stroke-dasharray", (c * p) + " " + c);
+    var stop = fEl.querySelector('[data-fw="stop"]'); stop.textContent = F.phase === "done" ? "Kolejna sesja" : "Zakończ";
+    var plus = fEl.querySelector(".fw-plus");
+    if (F.phase === "done") { plus.textContent = "Przerwa 5 min"; plus.dataset.fw = "break"; } else { plus.textContent = "+5 min"; plus.dataset.fw = "plus"; }
+  }
+  function focusTick() {
+    if (!F) return;
+    if (F.phase !== "done" && Date.now() >= F.end) {
+      if (F.phase === "work") {
+        var r = db.running(); if (r && r.task.id === F.taskId) db.stopTimer();
+        var t = db.task(F.taskId); F = { phase: "done", taskId: F.taskId, end: Date.now(), total: 1 };
+        beep(3); notify("Koniec sesji skupienia", (t ? t.title + " – " : "") + "czas na 5 minut przerwy."); SP.toast("Koniec sesji – czas zapisany w zadaniu. Pora na przerwę!");
+        if (SP.celebrate) SP.celebrate(innerWidth - 120, innerHeight - 90, 26);
+      } else { beep(2); notify("Koniec przerwy", "Wracamy do pracy?"); F = { phase: "done", taskId: F.taskId, end: Date.now(), total: 1 }; }
+    }
+    drawFocus();
+  }
+  SP.focus = {
+    taskId: function () { return F && F.phase === "work" ? F.taskId : null; },
+    start: function (taskId, minutes) {
+      var t = db.task(taskId); if (!t) return;
+      var r = db.running(); if (!r || r.task.id !== taskId) db.startTimer(taskId);
+      F = { phase: "work", taskId: taskId, end: Date.now() + (minutes || 25) * 60000, total: (minutes || 25) * 60000 };
+      if (window.Notification && Notification.permission === "default") { try { Notification.requestPermission(); } catch (e) {} }
+      clearInterval(fTick); fTick = setInterval(focusTick, 500); drawFocus();
+      SP.toast("Sesja skupienia: 25 min – stoper liczy czas w zadaniu");
+    },
+    stop: function () {
+      if (F && F.phase === "work") { var r = db.running(); if (r && r.task.id === F.taskId) db.stopTimer(); }
+      F = null; clearInterval(fTick); drawFocus(); db.changed("time");
+    },
+    _state: function () { return F; },
   };
 
   /* =================== Szablony =================== */

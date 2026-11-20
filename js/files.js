@@ -8,6 +8,10 @@
   var DB_NAME = "sprynt-files", STORE = "blobs";
   var uid = function () { return "f" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); };
   var key = function (id) { return SP.user.id + ":" + id; };
+  // Tryb chmury: pliki trafiają też do prywatnego magazynu Supabase „files” (<user_id>/<file_id>),
+  // a IndexedDB służy jako lokalna pamięć podręczna.
+  var cloudFiles = window.SPAuth && SPAuth.cloud && SPAuth.client ? SPAuth.client.storage.from("files") : null;
+  var cpath = function (id) { return SP.user.id + "/" + id; };
 
   var dbp = null;
   function idb() {
@@ -15,9 +19,11 @@
     dbp = new Promise(function (resolve, reject) {
       if (!window.indexedDB) { reject(new Error("Ta przeglądarka nie pozwala zapisywać plików (brak IndexedDB).")); return; }
       var r = indexedDB.open(DB_NAME, 1);
+      // Baza może być zablokowana (np. trwa jej usuwanie w innej karcie) – nie czekamy w nieskończoność.
+      var t = setTimeout(function () { dbp = null; reject(new Error("Magazyn plików w przeglądarce nie odpowiada.")); }, 4000);
       r.onupgradeneeded = function () { r.result.createObjectStore(STORE); };
-      r.onsuccess = function () { resolve(r.result); };
-      r.onerror = function () { reject(r.error || new Error("Nie udało się otworzyć magazynu plików.")); };
+      r.onsuccess = function () { clearTimeout(t); var d = r.result; d.onversionchange = function () { d.close(); dbp = null; }; resolve(d); };
+      r.onerror = function () { clearTimeout(t); dbp = null; reject(r.error || new Error("Nie udało się otworzyć magazynu plików.")); };
     });
     return dbp;
   }
@@ -84,7 +90,8 @@
     return files.reduce(function (p, f) {
       return p.then(function () {
         var id = uid();
-        return tx("readwrite", function (st) { return st.put(f, key(id)); }).then(function () {
+        return (cloudFiles ? cloudFiles.upload(cpath(id), f, { upsert: true, contentType: f.type || "application/octet-stream" }).then(function (r) { if (r.error) throw new Error("Nie udało się wysłać „" + f.name + "” do chmury: " + r.error.message); }) : Promise.resolve())
+          .then(function () { return tx("readwrite", function (st) { return st.put(f, key(id)); }).catch(function (e) { if (!cloudFiles) throw e; }); }).then(function () {
           db.addFile({ id: id, name: f.name, size: f.size, type: f.type || "", uploadedAt: new Date().toISOString(), taskId: opts.taskId || null, by: "me" });
           if (opts.ids) opts.ids.push(id);
           if (opts.taskId) db.updateTask(opts.taskId, {}, "dodał(a) załącznik „" + f.name + "”");
@@ -99,7 +106,17 @@
       return done;
     });
   };
-  function blobOf(id) { return tx("readonly", function (st) { return st.get(key(id)); }); }
+  function blobOf(id) {
+    return tx("readonly", function (st) { return st.get(key(id)); }).catch(function () { return null; }).then(function (b) {
+      if (b || !cloudFiles) return b;
+      // nie ma w pamięci podręcznej (inne urządzenie) → pobierz z chmury i zapamiętaj
+      return cloudFiles.download(cpath(id)).then(function (r) {
+        if (r.error || !r.data) return null;
+        var meta = db.file(id), blob = r.data;
+        return tx("readwrite", function (st) { return st.put(new File([blob], meta ? meta.name : id, { type: blob.type }), key(id)); }).catch(function () {}).then(function () { return blob; });
+      });
+    });
+  }
   /** Zawartość pliku z chmury (Blob) albo null. */
   SP.fileBlob = blobOf;
   SP.downloadFile = function (id) {
@@ -115,7 +132,7 @@
     var f = db.file(id); if (!f) return Promise.resolve(false);
     return SP.confirm("Usunąć plik?", "„" + f.name + "” zniknie z chmury" + (f.taskId ? " i z zadania" : "") + ".").then(function (ok) {
       if (!ok) return false;
-      return tx("readwrite", function (st) { return st.delete(key(id)); }).catch(function () {}).then(function () {
+      return Promise.all([tx("readwrite", function (st) { return st.delete(key(id)); }).catch(function () {}), cloudFiles ? cloudFiles.remove([cpath(id)]).catch(function () {}) : null]).then(function () {
         db.removeFile(id); SP.toast("Usunięto „" + f.name + "”"); return true;
       });
     });
@@ -147,7 +164,9 @@
   /** Usuwa zawartość wszystkich plików zalogowanego konta (przy usuwaniu konta). */
   SP.wipeFiles = function () {
     var ids = db.raw.files.map(function (f) { return f.id; });
-    return tx("readwrite", function (st) { ids.forEach(function (id) { st.delete(key(id)); }); return null; }).catch(function () {});
+    var local = tx("readwrite", function (st) { ids.forEach(function (id) { st.delete(key(id)); }); return null; }).catch(function () {});
+    var remote = cloudFiles && ids.length ? cloudFiles.remove(ids.map(cpath)).catch(function () {}) : null;
+    return Promise.all([local, remote]);
   };
   /** Otwiera systemowy wybór plików. */
   SP.pickFiles = function (opts) {

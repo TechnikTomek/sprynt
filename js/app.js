@@ -163,6 +163,7 @@
     } });
     if (type === "list") items.push({ label: "Pola niestandardowe…", icon: "spreadsheet", run: function () { SP.manageFields(id); } });
     items.push({ label: "Eksportuj zadania (CSV)", icon: "download", run: function () { SP.exportCSV(type, id); } });
+    items.push({ label: "Eksportuj do kalendarza (.ics)", icon: "calendar", run: function () { SP.exportICS(type, id); } });
     if (type === "space") items.push({ label: "Czat przestrzeni", icon: "message-square", run: function () { location.hash = "#/chat/" + id; } });
     items.push("-", { label: "Usuń " + label, icon: "trash", danger: true, run: function () {
       SP.confirm("Usunąć " + label + " „" + o.name + "”?", "Razem z zadaniami trafi do kosza – możesz to przywrócić przez 30 dni.").then(function (ok) {
@@ -272,14 +273,21 @@
       { label: "Skrzynka", icon: "inbox", run: function () { location.hash = "#/inbox"; } },
       { label: "Ustawienia", icon: "user-cog", run: function () { location.hash = "#/settings"; } },
       { label: "Skróty klawiszowe", icon: "keyboard", run: function () { SP.showShortcuts(); } },
+    ].concat(window.SPInstall && !SPInstall.standalone() ? [{ label: SPInstall.available() ? "Zainstaluj aplikację" : "Jak zainstalować aplikację?", icon: "download", run: function () {
+      if (SPInstall.available()) SPInstall.prompt().then(function (ok) { if (ok) SP.toast("Sprynt zainstalowany – znajdziesz go wśród aplikacji"); });
+      else SP.confirm("Zainstaluj Sprynt jako aplikację", SPInstall.howTo() + "\n\nPo instalacji Sprynt otwiera się w osobnym oknie i działa także bez internetu.", "Rozumiem");
+    } }] : []).concat([
       "-",
       { header: "Motyw" },
       { label: "Jasny", icon: "sun", active: SPTheme.pref() === "light", run: function () { SPTheme.set("light"); } },
       { label: "Ciemny", icon: "moon", active: SPTheme.pref() === "dark", run: function () { SPTheme.set("dark"); } },
       { label: "Systemowy", icon: "monitor", active: SPTheme.pref() === "system", run: function () { SPTheme.set("system"); } },
       "-",
-      { label: "Wyloguj się", icon: "log-out", run: function () { SPAuth.logout(); history.replaceState(null, "", location.pathname + "#login"); location.reload(); } },
-    ], { align: "right" });
+      { label: "Wyloguj się", icon: "log-out", run: function () {
+        var flush = SP.cloud && SP.cloud.status().dirty ? SP.cloud.push() : Promise.resolve();
+        flush.then(function () { SP.cloudLeaving = true; return SPAuth.logout(); }).then(function () { history.replaceState(null, "", location.pathname + "#login"); location.reload(); });
+      } },
+    ]), { align: "right" });
   });
   $("#wsBtn").addEventListener("click", function (e) {
     SP.menu(e.currentTarget, [
@@ -289,16 +297,7 @@
       { label: "Zaproś członków", icon: "users", run: invite },
     ]);
   });
-  function invite() {
-    SP.form({ title: "Zaproś do Sprynt", submit: "Wyślij zaproszenie", fields: [{ name: "email", label: "Adres e-mail", placeholder: "osoba@firma.pl", required: true }] })
-      .then(function (v) {
-        if (!v || !v.email) return;
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) { SP.toast("To nie wygląda na adres e-mail"); return; }
-        var p = db.invite(v.email);
-        // Konta są na razie lokalne, więc e-mail nie wychodzi – osoba pojawia się w zespole i można ją przypisywać.
-        SP.toast(p ? "Dodano " + p.name + " do zespołu. E-maile z zaproszeniem wyślemy po podłączeniu serwera." : "Ta osoba jest już w zespole");
-      });
-  }
+  function invite() { SP.inviteDialog(); }
   $("#inviteBtn").addEventListener("click", invite);
 
   /* ---- Mobilny pasek boczny ---- */
@@ -341,6 +340,8 @@
       ["Nowa tablica online", "presentation", function () { SP.newWhiteboard(); }],
       ["Czat", "message-square", function () { location.hash = "#/chat"; }], ["Szablony zadań", "files", function () { location.hash = "#/templates"; }],
       ["Kosz", "trash", function () { location.hash = "#/trash"; }],
+      ["Zaproś znajomych", "users", function () { SP.inviteDialog(); }], ["Zespół", "users", function () { location.hash = "#/team"; }],
+      ["Ustawienia AI", "sparkles", function () { location.hash = "#/settings"; setTimeout(function () { var a = document.getElementById("ai-sec"); if (a) a.scrollIntoView({ behavior: "smooth" }); }, 120); }],
       ["Zadania z pliku (Word, PDF, Excel)", "sparkles", function () { SP.extractTasks(); }],
       ["Strona główna", "house", function () { location.hash = "#/home"; }], ["Skrzynka", "inbox", function () { location.hash = "#/inbox"; }], ["Moje zadania", "list-checks", function () { location.hash = "#/my-tasks"; }],
     ].filter(function (a) { return m(a[0]); });

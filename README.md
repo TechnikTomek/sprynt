@@ -2,9 +2,19 @@
 
 Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabela, kalendarz, oś czasu, pulpit z wykresami, tablice online (whiteboard), cele, automatyzacje, czat, pola niestandardowe, szablony, przypomnienia, śledzenie czasu, dokumenty i chmura na pliki.
 
+**AI (Claude):** po dodaniu własnego klucza API Anthropic w Ustawieniach zadania z dokumentów wyciąga model Claude – naprawdę czyta treść (także PDF-y, skany i zdjęcia notatek), sprawdza dokument i wskazuje problemy. Klucz zostaje w Twojej przeglądarce.
+
+**Zaproszenia:** zaproś znajomych e-mailem, WhatsAppem, Telegramem, SMS-em albo linkiem – link otwiera Sprynt z udostępnionymi zadaniami.
+
 **Zadania z pliku:** wgraj notatki, protokół, PDF albo arkusz Excel, a Sprynt wyciągnie z niego zadania dla zespołu – z osobami, terminami i priorytetami. Dla kontrolerów finansowych: checklisty zamknięcia miesiąca (terminy WD+n), niezapłacone faktury i odchylenia budżetu od wykonania.
 
 **Strona:** https://techniktomek.github.io/sprynt/ · **Aplikacja:** https://techniktomek.github.io/sprynt/app.html · **Film:** [promo/sprynt-promo.mp4](promo/sprynt-promo.mp4)
+
+## Chmura (Supabase)
+
+Po uzupełnieniu `js/config.js` (instrukcja: [`supabase/README.md`](supabase/README.md)) Sprynt ma prawdziwe konta z potwierdzeniem e-maila i resetem hasła, a dane i pliki są w bazie Supabase, chronione regułami RLS – logowanie działa na każdym urządzeniu, także offline (synchronizacja po powrocie internetu). Bez konfiguracji działa tryb lokalny.
+
+Sprynt można też zainstalować jako aplikację (PWA) na komputerze i telefonie.
 
 ## Jak to działa
 
@@ -16,5 +26,5 @@ Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabel
 
 - `index.html`, `css/landing.css`, `js/landing.js` – strona startowa
 - `app.html` – aplikacja (logowanie + wszystkie widoki), `css/app.css`, `css/auth.css`
-- `js/` – logika: `data.js` (dane), `ui.js`, `task.js`, `views.js`, `insights.js`, `whiteboard.js`, `more.js`, `extract.js`, `app.js`
+- `js/` – logika: `data.js` (dane), `ui.js`, `task.js`, `views.js`, `insights.js`, `whiteboard.js`, `more.js`, `ai.js`, `extract.js`, `invite.js`, `anim.js`, `app.js`
 - `promo/` – film promocyjny i jego źródło (`promo.html`)

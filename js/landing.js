@@ -259,7 +259,9 @@
   /* ---- FAQ ---- */
   var faq = [
     ["Czy Sprynt jest naprawdę darmowy?", "Tak. Plan Free nie ma limitu zadań ani czasu. Płatne plany dodają funkcje dla większych zespołów."],
-    ["Gdzie są przechowywane moje dane?", "Na razie konto i wszystkie dane są zapisywane lokalnie w Twojej przeglądarce. Synchronizacja z serwerem i między urządzeniami pojawi się w kolejnej wersji."],
+    window.SPRYNT_CLOUD && SPRYNT_CLOUD.url
+      ? ["Gdzie są przechowywane moje dane?", "W chmurze, w bazie w Unii Europejskiej. Logujesz się na każdym urządzeniu tym samym e-mailem i hasłem, a Twoje zadania, dokumenty i pliki widzisz tylko Ty (dostęp chronią reguły bezpieczeństwa w bazie). Kopię danych możesz w każdej chwili pobrać w Ustawieniach."]
+      : ["Gdzie są przechowywane moje dane?", "Na razie konto i wszystkie dane są zapisywane lokalnie w Twojej przeglądarce. Synchronizacja z serwerem i między urządzeniami pojawi się w kolejnej wersji."],
     ["Czy mogę przenieść zadania z innego narzędzia?", "Import z CSV i z popularnych narzędzi do zarządzania projektami jest na naszej liście. Na razie zadania tworzysz ręcznie albo skrótem T."],
     ["Czy Sprynt działa na telefonie?", "Tak – aplikacja dopasowuje się do szerokości ekranu, a pasek boczny chowa się pod przyciskiem menu."],
     ["Czy jest ciemny motyw?", "Jest. Przełączysz go ikoną słońca/księżyca w górnym pasku albo zostawisz „Systemowy”, żeby dopasował się do ustawień urządzenia."],
@@ -277,4 +279,5 @@
   SP.hydrateIcons();
   observeReveals(document);
   heroLoop();
+  if (window.SPRYNT_CLOUD && SPRYNT_CLOUD.url) { var pn = document.querySelector(".plans-note"); if (pn) pn.textContent = "Ceny netto. Funkcje planów Pro i Zespół są w przygotowaniu. Konto i dane są bezpiecznie zapisywane w chmurze – dostępne na każdym urządzeniu."; }
 })();

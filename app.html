@@ -6,15 +6,28 @@
   <title>Sprynt</title>
   <meta name="description" content="Sprynt – zadania, listy, tablice, kalendarz i dokumenty w jednym miejscu." />
   <link rel="icon" href="img/logo.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#6c5ce7" />
+  <link rel="apple-touch-icon" href="img/icon-192.png" />
+  <script src="js/pwa.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <script src="js/config.js"></script>
+  <script>
+    // Chmura (Supabase) skonfigurowana → biblioteka przed auth.js (synchronicznie, żeby SPAuth miał klienta).
+    if (window.SPRYNT_CLOUD && SPRYNT_CLOUD.url && SPRYNT_CLOUD.anonKey && !window.supabase) document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js"><\/script>');
+  </script>
   <script src="js/theme.js"></script>
   <script src="js/auth.js"></script>
   <script>
     // Logowanie i aplikacja to jeden plik: niektóre przeglądarki (np. Firefox z izolacją plików)
     // trzymają osobną pamięć dla każdego pliku file://, więc przekierowania między stronami gubiłyby sesję.
-    window.SP_SIGNED_IN = !!SPAuth.current();
+    // Link z zaproszeniem (#join=…) zapamiętujemy na czas rejestracji/logowania w tej karcie.
+    if (/^#join=/.test(location.hash)) { try { sessionStorage.setItem("sprynt:join", location.hash.slice(6)); } catch (e) {} history.replaceState(null, "", location.pathname + (SPAuth.current() ? "#/home" : "#register")); }
+    addEventListener("hashchange", function () { if (/^#join=/.test(location.hash)) location.reload(); });
+    // Link „ustaw nowe hasło” zawsze pokazuje ekran zmiany hasła, nawet gdy ktoś jest zalogowany.
+    window.SP_SIGNED_IN = !!SPAuth.current() && SPAuth.urlAuth !== "recovery";
     document.write('<link rel="stylesheet" href="css/' + (SP_SIGNED_IN ? "app" : "auth") + '.css" />' +
       (SP_SIGNED_IN ? "" : "<style>.app, .pal-bg, .toast { display: none !important; }</style>"));
   </script>
@@ -37,6 +50,7 @@
           <a class="side-item" href="#/inbox" data-route="inbox"><span data-icon="inbox" data-size="18"></span><span>Skrzynka</span><span class="si-count" id="inboxCount" hidden></span></a>
           <button class="side-item side-x" type="button" data-extract-open><span data-icon="sparkles" data-size="18"></span><span>Zadania z pliku</span></button>
           <a class="side-item" href="#/chat" data-route="chat"><span data-icon="message-square" data-size="18"></span><span>Czat</span></a>
+          <a class="side-item" href="#/team" data-route="team"><span data-icon="users" data-size="18"></span><span>Zespół</span></a>
           <a class="side-item" href="#/my-tasks" data-route="my-tasks"><span data-icon="list-checks" data-size="18"></span><span>Moje zadania</span></a>
           <a class="side-item" href="#/dashboard" data-route="dashboard"><span data-icon="chart-column" data-size="18"></span><span>Pulpit</span></a>
           <a class="side-item" href="#/docs" data-route="docs"><span data-icon="file-text" data-size="18"></span><span>Dokumenty</span></a>
@@ -81,6 +95,7 @@
           <kbd id="kbdHint">⌘K</kbd>
         </button>
         <div class="top-actions">
+          <button class="sync-pill" id="syncPill" hidden></button>
           <button class="timer-pill" id="timerPill" hidden></button>
           <button class="btn primary sm" id="newBtn" aria-haspopup="true"><span data-icon="plus" data-size="15"></span><span class="lbl">Nowe</span></button>
           <button class="ibtn" id="themeBtn" aria-label="Przełącz motyw" title="Przełącz motyw"></button>
@@ -172,7 +187,7 @@
 
   <script>
     (function () {
-      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "extract", "anim", "app"] : ["icons", "login"];
+      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "ai", "extract", "invite", "cloud", "anim", "app"] : ["icons", "login"];
       if (!SP_SIGNED_IN) {
         var app = document.querySelector(".app"); if (app) app.remove();
         document.querySelectorAll(".pal-bg, .toast").forEach(function (e) { e.remove(); });

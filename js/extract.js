@@ -13,7 +13,9 @@
    *  1. ODCZYT PLIKÓW                                                     *
    * =================================================================== */
   var SUPPORTED = /\.(txt|md|markdown|csv|tsv|log|docx|odt|pdf|html?|xlsx|xlsm|xls|ods)$/i;
-  SP.canExtract = function (f) { return SUPPORTED.test((f && f.name) || ""); };
+  var IMG = /\.(png|jpe?g|webp|gif)$/i;
+  var aiOn = function () { return !!(SP.ai && SP.ai.enabled()); };
+  SP.canExtract = function (f) { var n = (f && f.name) || ""; return SUPPORTED.test(n) || (IMG.test(n) && aiOn()); };
   var dec = function (u8) { return new TextDecoder("utf-8").decode(u8); };
   var xmlText = function (s) { return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, function (m, n) { return String.fromCharCode(+n); }).replace(/&#x([0-9a-f]+);/gi, function (m, n) { return String.fromCharCode(parseInt(n, 16)); }).replace(/&amp;/g, "&"); };
 
@@ -193,13 +195,22 @@
   function readSource(file) {
     var n = (file.name || "").toLowerCase();
     if (file.size > db.MAX_FILE) return Promise.reject(new Error("Plik jest za duży – limit to " + SP.fmtSize(db.MAX_FILE) + "."));
-    if (!SUPPORTED.test(n)) return Promise.reject(new Error("Tego formatu nie umiem przeczytać. Wgraj TXT, MD, DOCX, ODT, PDF, HTML, CSV albo arkusz XLSX/XLS/ODS."));
+    if (IMG.test(n) && !aiOn()) return Promise.reject(new Error("Zdjęcia i skany odczytuje tylko AI – włącz je w Ustawieniach → AI (Claude)."));
+    if (!SUPPORTED.test(n) && !IMG.test(n)) return Promise.reject(new Error("Tego formatu nie umiem przeczytać. Wgraj TXT, MD, DOCX, ODT, PDF, HTML, CSV, arkusz XLSX/XLS/ODS" + (aiOn() ? " albo zdjęcie (JPG, PNG)." : ".")));
     var src = { name: file.name, size: file.size, file: file };
+    if (IMG.test(n)) return file.arrayBuffer().then(function (buf) {
+      src.kind = "image"; src.imgBuf = buf; src.lines = []; src.url = URL.createObjectURL(file);
+      src.imgType = /^image\/(png|jpeg|webp|gif)$/.test(file.type) ? file.type : "image/" + n.match(/\.(\w+)$/)[1].replace("jpg", "jpeg");
+      return src;
+    });
     if (/\.(csv|tsv)$/.test(n)) return file.text().then(function (t) { src.kind = "sheet"; src.sheets = csvSheet(t.replace(/^﻿/, ""), file.name.replace(/\.\w+$/, "")); return src; });
     if (/\.(txt|md|markdown|log)$/.test(n)) return file.text().then(function (t) { src.kind = "text"; src.lines = linesFrom(t.replace(/^﻿/, "")); return src; });
     if (/\.html?$/.test(n)) return file.text().then(function (t) { src.kind = "text"; src.lines = htmlLines(t); return src; });
     return file.arrayBuffer().then(function (buf) {
-      if (/\.pdf$/.test(n)) return pdfLines(buf).then(function (l) { src.kind = "text"; src.lines = l; return src; });
+      if (/\.pdf$/.test(n)) {
+        src.pdfBuf = buf.slice(0); // pdf.js może przejąć (odłączyć) bufor – kopia dla AI
+        return pdfLines(buf).catch(function (e) { if (aiOn()) return []; throw e; }).then(function (l) { src.kind = "text"; src.lines = l; return src; });
+      }
       if (/\.(xls|ods)$/.test(n)) return sheetjsSheets(buf).then(function (s) { src.kind = "sheet"; src.sheets = s; return src; });
       var z = zip(buf);
       if (/\.(xlsx|xlsm)$/.test(n)) return xlsxSheets(z).then(function (s) { src.kind = "sheet"; src.sheets = s; return src; });
@@ -622,11 +633,13 @@
     S.foot.hidden = true;
     var docs = db.raw.files.filter(SP.canExtract).slice(0, 6);
     S.body.innerHTML = '<div class="xt-pick">' +
-      '<label class="xt-drop" tabindex="0"><input type="file" hidden accept=".txt,.md,.markdown,.csv,.tsv,.docx,.odt,.pdf,.html,.htm,.xlsx,.xlsm,.xls,.ods" />' +
+      '<label class="xt-drop" tabindex="0"><input type="file" hidden accept=".txt,.md,.markdown,.csv,.tsv,.docx,.odt,.pdf,.html,.htm,.xlsx,.xlsm,.xls,.ods' + (aiOn() ? ",.png,.jpg,.jpeg,.webp,.gif" : "") + '" />' +
       '<span class="xt-drop-ico">' + ico("file-dropzone", 40) + '</span><b>Upuść plik albo kliknij, żeby wybrać</b>' +
       '<span class="muted">Notatki ze spotkania, brief, specyfikacja, protokół, checklista zamknięcia miesiąca, lista faktur, budżet…</span>' +
-      '<span class="xt-fmts">' + ["DOCX", "PDF", "XLSX", "XLS", "CSV", "TXT", "MD", "ODT", "ODS"].map(function (x) { return "<i>" + x + "</i>"; }).join("") + "</span></label>" +
+      '<span class="xt-fmts">' + ["DOCX", "PDF", "XLSX", "XLS", "CSV", "TXT", "MD", "ODT", "ODS"].concat(aiOn() ? ["JPG", "PNG"] : []).map(function (x) { return "<i>" + x + "</i>"; }).join("") + "</span></label>" +
       '<div class="xt-side">' +
+      (aiOn() ? '<div class="xt-ai-on">' + ico("sparkles", 16) + "<div><b>AI: " + esc(SP.ai.modelName()) + '</b><small>czyta treść dokumentów, skany i zdjęcia notatek, sprawdza je i wyciąga zadania</small></div><button class="link" data-ai-set>zmień</button></div>'
+        : '<div class="xt-ai-off">' + ico("sparkles", 16) + '<div><b>Tryb podstawowy (reguły)</b><small>Włącz AI (Claude), żeby zadania wyciągał model, który naprawdę rozumie tekst – także skany i zdjęcia.</small></div><button class="btn sm primary" data-ai-set>Włącz AI</button></div>') +
       '<div class="xt-try"><h3>' + ico("sparkles", 15) + 'Wypróbuj na przykładzie</h3>' +
       '<button class="xt-sample" data-sample="notes"><span class="ftile" style="--c:#3b82f6">' + ico("file-text", 16) + '</span><span><b>Notatki ze spotkania</b><small class="muted">osoby, terminy, priorytety, checklisty</small></span></button>' +
       '<button class="xt-sample" data-sample="book"><span class="ftile" style="--c:#1aae6f">' + ico("spreadsheet", 16) + '</span><span><b>Skoroszyt kontrolera (Excel)</b><small class="muted">zamknięcie miesiąca, faktury, budżet vs wykonanie</small></span></button>' +
@@ -635,6 +648,7 @@
       (docs.length ? '<div class="xt-cloud"><h3>' + ico("cloud", 15) + 'Z chmury</h3>' + docs.map(function (f) { return '<button class="xt-cf" data-cloud="' + f.id + '">' + SP.fileTile(f) + "<span>" + esc(f.name) + '</span><small class="muted">' + SP.fmtSize(f.size) + "</small></button>"; }).join("") + "</div>" : "") +
       "</div></div>";
     SP.hydrateIcons(S.body);
+    S.body.querySelector("[data-ai-set]").onclick = function () { close(); location.hash = "#/settings"; setTimeout(function () { var a = document.getElementById("ai-sec"); if (a) a.scrollIntoView({ behavior: "smooth", block: "center" }); }, 150); };
     var drop = S.body.querySelector(".xt-drop"), inp = drop.querySelector("input");
     inp.onchange = function () { if (inp.files[0]) start(inp.files[0], null, drop); };
     drop.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inp.click(); } });
@@ -682,30 +696,39 @@
   /* ---- wynik: dokument po lewej, zadania po prawej ---- */
   var MAX_LINES = 500;
   function docHTML(src) {
+    if (src.kind === "image") return '<div class="xl xt-imgwrap" data-k="img"><img class="xt-img" src="' + src.url + '" alt="" /></div>';
+    if (src.kind === "text" && !src.lines.some(function (l) { return l.text; }) && src.pdfBuf) return '<div class="xl xt-scanned" data-k="img">' + ico("file-image", 34) + "<b>PDF bez warstwy tekstu (skan)</b><span class=\"muted\">AI przeczyta strony jak obrazy.</span></div>";
     if (src.kind === "text") {
       var shown = src.lines.slice(0, MAX_LINES);
       return shown.map(function (l, i) { return '<div class="xl' + (l.text ? "" : " empty") + '" data-k="l' + i + '" style="padding-left:' + (14 + Math.min(l.indent, 16) * 5) + 'px">' + (esc(l.text) || "&nbsp;") + "</div>"; }).join("") +
         (src.lines.length > MAX_LINES ? '<div class="xl more muted">… i jeszcze ' + (src.lines.length - MAX_LINES) + " linii</div>" : "");
     }
     return src.sheets.map(function (sh, si) {
-      var res = S.sheetRes[si], cols = Math.min(8, Math.max.apply(null, sh.rows.map(function (r) { return r.length; }).concat([1])));
-      var modes = res.modes.map(function (m) { return '<option value="' + m + '"' + (m === res.mode ? " selected" : "") + ">" + MODES[m] + "</option>"; }).join("");
-      return '<div class="xs-h"><span class="xs-tab">' + ico("spreadsheet", 14) + esc(sh.name) + '</span><select class="input sm xs-mode" data-sheet="' + si + '" title="Jak czytać ten arkusz">' + modes + "</select>" +
-        (res.mode === "variance" ? '<label class="xs-thr">próg <input class="input sm" type="number" min="0" max="500" value="' + S.threshold + '" data-thr />%</label>' : "") + "</div>" +
+      var res = S.aiMode ? null : S.sheetRes[si], cols = Math.min(8, Math.max.apply(null, sh.rows.map(function (r) { return r.length; }).concat([1])));
+      var hdr = res ? res.map.header : mapColumns(sh.rows).header;
+      var modes = res ? res.modes.map(function (m) { return '<option value="' + m + '"' + (m === res.mode ? " selected" : "") + ">" + MODES[m] + "</option>"; }).join("") : "";
+      return '<div class="xs-h"><span class="xs-tab">' + ico("spreadsheet", 14) + esc(sh.name) + "</span>" + (res ? '<select class="input sm xs-mode" data-sheet="' + si + '" title="Jak czytać ten arkusz">' + modes + "</select>" : '<span class="xs-ai">' + ico("sparkles", 12) + "czyta AI</span>") +
+        (res && res.mode === "variance" ? '<label class="xs-thr">próg <input class="input sm" type="number" min="0" max="500" value="' + S.threshold + '" data-thr />%</label>' : "") + "</div>" +
         '<div class="xs-grid" style="--cols:' + cols + '">' + sh.rows.slice(0, MAX_LINES).map(function (r, ri) {
           if (!r.some(function (c) { return c && c.s; })) return "";
           var cells = []; for (var ci = 0; ci < cols; ci++) { var c = r[ci] || { s: "" }; cells.push('<span class="' + (c.n != null ? "num" : "") + '">' + esc(c.s) + "</span>"); }
-          return '<div class="xl xr' + (ri === res.map.header ? " hdr" : "") + '" data-k="s' + si + "r" + ri + '"><i>' + (ri + 1) + "</i>" + cells.join("") + "</div>";
+          return '<div class="xl xr' + (ri === hdr ? " hdr" : "") + '" data-k="s' + si + "r" + ri + '"><i>' + (ri + 1) + "</i>" + cells.join("") + "</div>";
         }).join("") + "</div>";
     }).join("");
   }
   function run(src, from, point) {
     if (!S) return;
     S.src = src; S.busy = true;
-    var res = extract(src, S);
+    S.aiMode = aiOn() && !S.noAI; S.ai = null;
+    if (!S.aiMode && (src.kind === "image" || (src.pdfBuf && !src.lines.some(function (l) { return l.text; })))) {
+      S.busy = false; S.body.innerHTML = '<div class="xt-loading err">' + ico("file-image", 28) + "<b>Ten plik to obraz albo skan – tekst odczyta tylko AI.</b>" + (SP.ai ? '<button class="btn sm primary" data-ai-on>Włącz AI w Ustawieniach</button>' : "") + "</div>";
+      SP.hydrateIcons(S.body); var bb = S.body.querySelector("[data-ai-on]"); if (bb) bb.onclick = function () { close(); location.hash = "#/settings"; };
+      return;
+    }
+    var res = S.aiMode ? { tasks: [], people: People() } : extract(src, S);
     S.tasks = res.tasks.map(function (t) { t.on = true; return t; }); S.people = res.people;
     S.body.innerHTML = '<div class="xt-run">' +
-      '<section class="xt-doc"><div class="xt-doc-h">' + (src.file ? SP.fileTile(src.file, "") : '<span class="ftile" style="--c:#3b82f6">' + ico("file-text", 16) + "</span>") + "<b>" + esc(src.name) + '</b><span class="muted">' + (src.kind === "sheet" ? src.sheets.length + " " + (src.sheets.length === 1 ? "arkusz" : "arkusze") : src.lines.filter(function (l) { return l.text; }).length + " linii") + " · " + SP.fmtSize(src.size || 0) + '</span></div>' +
+      '<section class="xt-doc"><div class="xt-doc-h">' + (src.file ? SP.fileTile(src.file, "") : '<span class="ftile" style="--c:#3b82f6">' + ico("file-text", 16) + "</span>") + "<b>" + esc(src.name) + '</b><span class="muted">' + (src.kind === "image" ? "zdjęcie" : src.kind === "sheet" ? src.sheets.length + " " + (src.sheets.length === 1 ? "arkusz" : "arkusze") : src.lines.filter(function (l) { return l.text; }).length + " linii") + " · " + SP.fmtSize(src.size || 0) + '</span></div>' +
       '<div class="xt-scroll"><div class="xt-lines">' + docHTML(src) + '<div class="xt-scan"></div></div></div></section>' +
       '<section class="xt-res"><div class="xt-res-h"><h3>Znalezione zadania</h3><span class="xt-count">0</span><span class="muted xt-sum"></span></div><div class="xt-cards"></div></section></div>';
     SP.hydrateIcons(S.body);
@@ -713,7 +736,7 @@
     var cards = S.body.querySelector(".xt-cards");
     S.tasks.forEach(function (t) { var c = SP.el(cardHTML(t)); c.style.visibility = "hidden"; cards.appendChild(c); });
     SP.hydrateIcons(cards); bindCards();
-    if (reduce || SP.extractInstant) { reveal(true); return; }
+    if (reduce || SP.extractInstant) { if (S.aiMode) think(true); else reveal(true); return; }
     // 1) plik „rozkłada się” w dokument
     var doc = S.body.querySelector(".xt-doc"), res2 = S.body.querySelector(".xt-res");
     var a1 = doc.animate([{ clipPath: "inset(0 0 100% 0 round 14px)", transform: "translateY(10px)" }, { clipPath: "inset(0 0 0% 0 round 14px)", transform: "none" }], { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)" });
@@ -726,7 +749,81 @@
       g.animate([{ transform: "translate(" + (r0.left + r0.width / 2 - r1.left - r1.width / 2) + "px," + (r0.top + r0.height / 2 - r1.top - r1.height / 2) + "px) scale(2.6) rotate(-10deg)", opacity: 0 },
         { transform: "translate(" + (r0.left - r1.left) * .4 + "px," + ((r0.top - r1.top) * .4 - 60) + "px) scale(2.2) rotate(6deg)", opacity: 1, offset: .5 }, { transform: "none", opacity: 1 }], { duration: 700, easing: "cubic-bezier(.2,.8,.2,1)" }).finished.then(function () { g.remove(); });
     }
-    a1.finished.then(function () { if (S) scan(); });
+    a1.finished.then(function () { if (S) (S.aiMode ? think() : scan()); });
+  }
+
+  /* =================== AI: model czyta dokument =================== */
+  function think(instant) {
+    var bar = S.body.querySelector(".xt-scan"), cards = S.body.querySelector(".xt-cards"), count = S.body.querySelector(".xt-count");
+    if (bar && !instant) { bar.style.display = "block"; bar.classList.add("thinking"); }
+    S.body.querySelector(".xt-sum").textContent = "";
+    cards.innerHTML = '<div class="xt-think"><div class="xt-orb"><i></i><i></i><i></i>' + ico("sparkles", 22) + '</div><b>' + esc(SP.ai.modelName()) + ' czyta dokument…</b><span class="muted xt-tick">Analizuję treść, osoby, terminy i ryzyka</span><div class="xt-found"></div></div>';
+    SP.hydrateIcons(cards);
+    var seen = 0, tick = cards.querySelector(".xt-tick"), found = cards.querySelector(".xt-found"), t0 = Date.now();
+    var timer = setInterval(function () { if (!S || !tick.isConnected) { clearInterval(timer); return; } if (!seen) tick.textContent = "Analizuję treść, osoby, terminy i ryzyka · " + Math.round((Date.now() - t0) / 1000) + " s"; }, 1000);
+    S.timers.push(timer);
+    SP.ai.extract(S.src, function (snap) {
+      if (!S) return;
+      var titles = [], m, re = /"title"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+      while ((m = re.exec(snap))) titles.push(m[1].replace(/\\"/g, '"').replace(/\\n/g, " ").replace(/\\u([0-9a-f]{4})/gi, function (x, h) { return String.fromCharCode(parseInt(h, 16)); }));
+      // ostatni tytuł może być jeszcze niedokończony – pokazujemy tylko domknięte
+      var done = titles.length && /"title"\s*:\s*"(?:[^"\\]|\\.)*"\s*,/.test(snap.slice(snap.lastIndexOf('"title"'))) ? titles.length : titles.length - 1;
+      while (seen < done) {
+        var chip = document.createElement("span"); chip.className = "xt-fchip"; chip.textContent = titles[seen]; found.appendChild(chip);
+        if (!reduce) chip.animate([{ opacity: 0, transform: "translateY(8px) scale(.9)" }, { opacity: 1, transform: "none" }], { duration: 300, easing: "cubic-bezier(.3,1.4,.5,1)" });
+        seen++; count.textContent = String(seen); tick.textContent = "Znaleziono " + seen + " " + plural(seen) + "…";
+      }
+    }).then(function (data) {
+      clearInterval(timer);
+      if (!S) return;
+      if (bar) { bar.classList.remove("thinking"); bar.style.display = "none"; }
+      S.ai = data; mapAI(data);
+      cards.innerHTML = "";
+      S.tasks.forEach(function (t) { var c = SP.el(cardHTML(t)); c.style.visibility = "hidden"; cards.appendChild(c); });
+      SP.hydrateIcons(cards); bindCards();
+      count.textContent = "0";
+      if (instant || reduce) reveal(true); else scan();
+    }, function (err) {
+      clearInterval(timer);
+      if (!S) return;
+      if (bar) { bar.classList.remove("thinking"); bar.style.display = "none"; }
+      S.busy = false;
+      cards.innerHTML = '<div class="xt-aierr">' + ico("x", 26) + "<b>AI nie przeczytało dokumentu</b><p></p>" +
+        '<div><button class="btn sm primary" data-retry>' + ico("sparkles", 14) + 'Spróbuj ponownie</button><button class="btn sm" data-noai>Użyj trybu bez AI</button><button class="btn sm ghost" data-aiset>Ustawienia AI</button></div></div>';
+      cards.querySelector("p").textContent = err.message; SP.hydrateIcons(cards);
+      cards.querySelector("[data-retry]").onclick = function () { run(S.src); };
+      cards.querySelector("[data-noai]").onclick = function () { S.noAI = true; run(S.src); };
+      cards.querySelector("[data-aiset]").onclick = function () { close(); location.hash = "#/settings"; };
+    });
+  }
+  /** Odpowiedź AI → karty (osoby z zespołu, linia źródłowa do animacji). */
+  function mapAI(data) {
+    var P = People(data.new_people || []), src = S.src;
+    var norm = function (x) { return String(x || "").toLowerCase().replace(/\s+/g, " ").trim(); };
+    function keyFor(t) {
+      if (src.kind === "image") return { key: "img", at: 0 };
+      if (src.kind === "sheet") {
+        var si = src.sheets.findIndex(function (sh) { return sh.name === t.source_sheet; }); if (si < 0) si = src.sheets.length === 1 ? 0 : -1;
+        var row = t.source_line ? t.source_line - 1 : -1;
+        if (si >= 0 && row >= 0 && src.sheets[si].rows[row]) return { key: "s" + si + "r" + row, at: row, sheet: si };
+        var q = norm(t.source_quote).slice(0, 40);
+        for (var a = 0; q && a < src.sheets.length; a++) for (var r = 0; r < src.sheets[a].rows.length; r++) if (norm(src.sheets[a].rows[r].map(function (c) { return c.s; }).join(" ")).indexOf(q) >= 0) return { key: "s" + a + "r" + r, at: r, sheet: a };
+        return { key: "none", at: 0 };
+      }
+      var li = t.source_line ? t.source_line - 1 : -1;
+      if (li >= 0 && src.lines[li] && src.lines[li].text) return { key: "l" + li, at: li };
+      var qq = norm(t.source_quote).slice(0, 40);
+      for (var i = 0; qq && i < src.lines.length; i++) if (norm(src.lines[i].text).indexOf(qq) >= 0) return { key: "l" + i, at: i };
+      return { key: src.pdfBuf && !src.lines.some(function (l) { return l.text; }) ? "img" : "none", at: 0 };
+    }
+    S.tasks = (data.tasks || []).map(function (t) {
+      var who = t.assignee ? (P.find(t.assignee) || P.add(t.assignee)) : null, k = keyFor(t);
+      return { key: k.key, at: k.at, sheet: k.sheet, on: true, title: String(t.title || "").slice(0, 200), desc: t.description || "", reason: t.reason || "",
+        assignees: who ? [who] : [], due: /^\d{4}-\d{2}-\d{2}$/.test(t.due || "") ? t.due : null, priority: t.priority || null,
+        tags: (t.tags || []).map(function (x) { return String(x).replace(/^#/, "").toLowerCase(); }).filter(Boolean).slice(0, 5), checklist: (t.checklist || []).slice(0, 30), done: !!t.done,
+        amount: typeof t.amount === "number" ? t.amount : null, party: t.counterparty || "" };
+    });
+    S.people = P;
   }
   function st(el, r) { el.style.position = "fixed"; el.style.left = r.left + "px"; el.style.top = r.top + "px"; el.style.width = r.width + "px"; el.style.height = r.height + "px"; el.style.margin = "0"; }
 
@@ -778,8 +875,20 @@
     S.body.querySelectorAll(".xl[data-k]").forEach(function (e) { if (S.tasks.some(function (t) { return t.key === e.dataset.k; })) e.classList.add("hit", "seen"); });
     S.body.querySelector(".xt-count").textContent = S.tasks.length;
     drawSummary(); drawFoot();
+    if (S.aiMode && S.ai) {
+      var cards = S.body.querySelector(".xt-cards"), old = cards.querySelector(".xt-aibox"); if (old) old.remove();
+      var u = S.ai.usage || {}, w = S.ai.warnings || [];
+      var box = SP.el('<div class="xt-aibox"><div class="xt-aih">' + ico("sparkles", 15) + "<b>Analiza AI</b><small>" + esc(SP.ai.modelName()) + (u.input_tokens ? " · " + (u.input_tokens + (u.output_tokens || 0)).toLocaleString("pl-PL") + " tokenów" : "") + "</small></div>" +
+        (S.ai.summary ? '<p class="xt-ais"></p>' : "") + (w.length ? '<div class="xt-aiw"><b>' + ico("flag", 13) + "Uwagi do dokumentu (" + w.length + ')</b><ul></ul></div>' : '<div class="xt-aiok">' + ico("check", 13) + "Nie znalazłem problemów w dokumencie.</div>") +
+        (S.ai.note ? '<p class="muted xt-ain"></p>' : "") + "</div>");
+      if (S.ai.summary) box.querySelector(".xt-ais").textContent = S.ai.summary;
+      w.forEach(function (x) { var li = document.createElement("li"); li.textContent = x; box.querySelector("ul").appendChild(li); });
+      if (S.ai.note) box.querySelector(".xt-ain").textContent = S.ai.note;
+      cards.insertBefore(box, cards.firstChild); SP.hydrateIcons(box); cards.scrollTop = 0;
+      if (!instant && !reduce) box.animate([{ opacity: 0, transform: "translateY(-8px)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: "cubic-bezier(.2,.8,.2,1)" });
+    }
     if (!instant && !reduce) S.foot.animate([{ transform: "translateY(100%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 380, easing: "cubic-bezier(.2,.8,.2,1)" });
-    if (!S.tasks.length) S.body.querySelector(".xt-cards").innerHTML = '<div class="empty-b">' + ico("search", 34) + "<h3>Nie znalazłem zadań</h3><p class='muted'>Zadania rozpoznaję po wypunktowaniach, polach [ ], słowach „TODO”, czasownikach („przygotować”, „wyślij”) i kolumnach arkusza (Zadanie, Osoba, Termin…).</p></div>";
+    if (!S.tasks.length) S.body.querySelector(".xt-cards").insertAdjacentHTML("beforeend", S.aiMode ? '<div class="empty-b">' + ico("search", 34) + "<h3>AI nie znalazło zadań w tym dokumencie</h3><p class='muted'>Dokument nie zawiera rzeczy do zrobienia – albo spróbuj innego pliku.</p></div>" : '<div class="empty-b">' + ico("search", 34) + "<h3>Nie znalazłem zadań</h3><p class='muted'>Zadania rozpoznaję po wypunktowaniach, polach [ ], słowach „TODO”, czasownikach („przygotować”, „wyślij”) i kolumnach arkusza (Zadanie, Osoba, Termin…).</p></div>");
   }
   function drawSummary() {
     var on = S.tasks.filter(function (t) { return t.on; }), who = {};
@@ -799,6 +908,7 @@
     return '<div class="xc' + (t.on ? "" : " off") + (t.done ? " done" : "") + '" data-i="' + i + '">' +
       '<button class="xc-on" data-c="on" aria-pressed="' + t.on + '" title="Uwzględnij">' + ico("check", 12) + "</button>" +
       '<div class="xc-b"><input class="xc-t" value="' + esc(t.title) + '" aria-label="Nazwa zadania" />' +
+      (t.reason ? '<div class="xc-why" title="Dlaczego AI uznało to za zadanie">' + ico("sparkles", 11) + esc(t.reason) + "</div>" : "") +
       '<div class="xc-chips"><button class="xc-chip" data-c="who">' + (who || ico("user", 13) + '<span class="muted">Przypisz</span>') + "</button>" +
       '<button class="xc-chip" data-c="due">' + (d ? '<span class="due ' + d.cls + '">' + ico("calendar", 13) + d.label + "</span>" : ico("calendar", 13) + '<span class="muted">Termin</span>') + "</button>" +
       '<button class="xc-chip" data-c="prio">' + (t.priority ? SP.flag(t.priority, true) : ico("flag", 13) + '<span class="muted">Priorytet</span>') + "</button>" +
@@ -859,7 +969,8 @@
     var hasAmt = S.src.kind === "sheet" && on.some(function (t) { return t.amount != null && !isNaN(t.amount); });
     if (S.addPeople == null) S.addPeople = true; if (S.addFields == null) S.addFields = true; if (S.saveFile == null) S.saveFile = !S.src.cloudId && !S.src.pasted && !S.src.sample;
     S.foot.hidden = false;
-    S.foot.innerHTML = '<div class="xt-f-opts">' +
+    var aiBtn = !SP.ai ? "" : S.aiMode ? '<button class="xc-chip" data-f="noai" title="Pokaż wynik trybu podstawowego (reguły)">' + ico("x", 12) + "Bez AI</button>" : aiOn() ? '<button class="xc-chip xt-aichip" data-f="ai">' + ico("sparkles", 13) + "Przeanalizuj z AI</button>" : '<button class="xc-chip xt-aichip" data-f="aiset">' + ico("sparkles", 13) + "Włącz AI</button>";
+    S.foot.innerHTML = '<div class="xt-f-opts">' + aiBtn +
       '<button class="xc-chip xt-list" data-f="list">' + ico("list", 14) + "Do listy: <b>" + (l ? esc((db.space(l.spaceId) || {}).name + " / " + l.name) : "—") + "</b>" + ico("chevron-down", 12) + "</button>" +
       (np.length ? '<label class="xt-opt"><input type="checkbox" data-f="people"' + (S.addPeople ? " checked" : "") + " />Dodaj do zespołu: <b>" + np.map(esc).join(", ") + "</b></label>" : "") +
       (hasAmt ? '<label class="xt-opt"><input type="checkbox" data-f="fields"' + (S.addFields ? " checked" : "") + " />Kwoty i kontrahentów zapisz w polach listy</label>" : "") +
@@ -876,6 +987,9 @@
         if (b.dataset.f === "list") SP.pickList(b, S.listId, function (v) { S.listId = v; drawFoot(); });
         else if (b.dataset.f === "split") split();
         else if (b.dataset.f === "create") create();
+        else if (b.dataset.f === "noai") { S.noAI = true; run(S.src); }
+        else if (b.dataset.f === "ai") { S.noAI = false; run(S.src); }
+        else if (b.dataset.f === "aiset") { close(); location.hash = "#/settings"; }
       });
     }
   }
@@ -914,11 +1028,11 @@
     }
     var created = on.map(function (t) {
       var cf = {}; if (fAmt && t.amount != null && !isNaN(t.amount)) cf[fAmt.id] = Math.round(t.amount * 100) / 100; if (fParty && t.party) cf[fParty.id] = t.party;
-      var desc = (t.desc ? "<p>" + esc(t.desc).replace(/\n/g, "<br>") + "</p>" : "") + '<p class="muted">Źródło: „' + esc(src.name) + "”" + (t.sheet != null ? ", arkusz „" + esc(src.sheets[t.sheet].name) + "”, wiersz " + (t.at + 1) : ", linia " + (t.at + 1)) + "</p>";
+      var desc = (t.desc ? "<p>" + esc(t.desc).replace(/\n/g, "<br>") + "</p>" : "") + (t.reason ? '<p class="muted">✦ AI: ' + esc(t.reason) + "</p>" : "") + '<p class="muted">Źródło: „' + esc(src.name) + "”" + (t.sheet != null ? ", arkusz „" + esc(src.sheets[t.sheet].name) + "”, wiersz " + (t.at + 1) : ", linia " + (t.at + 1)) + "</p>";
       var task = db.createTask({ listId: listId, title: t.title.trim(), assignees: t.assignees.map(function (a) { return a in mapP ? mapP[a] : a; }).filter(Boolean),
         due: t.due, priority: t.priority, tags: t.tags, status: t.done ? "done" : "todo", desc: desc, cf: cf,
         checklist: t.checklist.map(function (x) { return { id: Math.random().toString(36).slice(2, 8), text: x, done: false }; }) });
-      task.activity.push({ by: "me", text: "utworzył(a) z pliku „" + src.name + "”", at: new Date().toISOString() });
+      task.activity.push({ by: "me", text: "utworzył(a) z pliku „" + src.name + "”" + (S.aiMode ? " (analiza AI: " + SP.ai.modelName() + ")" : ""), at: new Date().toISOString() });
       return task;
     });
     db.changed("tasks");

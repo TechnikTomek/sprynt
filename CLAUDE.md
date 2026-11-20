@@ -11,6 +11,21 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Ikony:** wyłącznie z serwera MCP thesvg (`kind: "ui"`, wygląd `glass`). Nie rysujemy własnych i nie dodajemy bibliotek ikon. Dodawanie nowej ikony jest opisane w `icons/README.md`.
 - **Daty terminów:** zawsze jako `"RRRR-MM-DD"` w czasie lokalnym (`SP.date.ymd`). Nigdy przez `toISOString().slice(0,10)`, bo to UTC i przesuwa dzień.
 
+## Chmura – Supabase (dodane 2026-11-20, `js/config.js`, `js/auth.js`, `js/cloud.js`, `supabase/`)
+
+- **Włączanie:** `js/config.js` → `SPRYNT_CLOUD = {url, anonKey}` (publiczne dane projektu; bezpieczeństwo = RLS). Puste = tryb lokalny. Instrukcja dla właściciela: `supabase/README.md`, schemat: `supabase/schema.sql` (tabela `workspaces` z RLS, funkcje `save_workspace(p_data, p_base)` i `delete_my_account()`, prywatny bucket `files` z folderem `<user_id>/`).
+- **Biblioteka:** `@supabase/supabase-js@2.119.0` (UMD z jsDelivr) dopisywana w `<head>` przez `document.write` tylko przy skonfigurowanej chmurze, przed `auth.js`. Klient: `storageKey: "sprynt-cloud-auth"`, własny `storage` (localStorage przy „Zapamiętaj mnie”, inaczej sessionStorage), `flowType: "implicit"` (linki z e-maila działają na dowolnym urządzeniu).
+- **SPAuth (ten sam interfejs w obu trybach):** `current()` czyta sesję synchronicznie ze storage; `register` (może zwrócić `{pending, email}` = trzeba potwierdzić e-mail), `login` (`err.code === "email_not_confirmed"`), `logout()` → Promise, `resend`, `resetPassword`, `setNewPassword`, `updateProfile` (zmiana e-maila wymaga potwierdzenia), `verify`, `changePassword`, `deleteAccount(password, beforeDelete)`. Błędy Supabase mapowane po `error.code` na polski. `SPAuth.urlAuth` = `signup` | `recovery` | `error` gdy adres zawiera token z e-maila (recovery zawsze pokazuje ekran „Ustaw nowe hasło”).
+- **Synchronizacja (`cloud.js`):** start z lokalnej kopii, `pull()` w tle; `db.save` → `SP.cloudDirty()` → po 1,2 s `save_workspace` z `p_base = rev`. Wynik ujemny = konflikt → `merge(local, server)` (po id, nowsze `updatedAt` wygrywa) → ponowny zapis. Offline: flaga `dirty` w `sprynt:sync:<uid>` (`db.syncMeta`), zapis po `online`. Powrót do karty → `pull`. Pierwsze logowanie: propozycja przeniesienia danych konta lokalnego z tym samym e-mailem (`db.legacyLocalData`). Znacznik `#syncPill` w górnym pasku. `SP.cloudLeaving = true` przed celowym wylogowaniem/usunięciem (pomija przeładowanie po SIGNED_OUT).
+- **Pliki:** w trybie chmury `files.js` wysyła do bucketu `files` (`<uid>/<fileId>`), IndexedDB to pamięć podręczna (otwarcie z limitem 4 s); brak w cache → pobranie z chmury.
+- **Testy:** `scratchpad/bidi/fake-supabase.js` – symulator Supabase wstrzykiwany przez `script.addPreloadScript` (stan „serwera” w `localStorage['fake-supa']`).
+
+## PWA, skupienie, kalendarz (dodane 2026-11-20)
+
+- **PWA:** `manifest.webmanifest`, `sw.js` (własne pliki: najpierw sieć, offline z cache; CDN: cache + odświeżanie w tle; Supabase/Anthropic zawsze sieć), `js/pwa.js` (rejestracja tylko przez https, `SPInstall.available/prompt/howTo/standalone`), ikony `img/icon-192.png`, `icon-512.png`, `icon-maskable.png`. **Po dodaniu nowego pliku JS dopisz go do `SHELL` w `sw.js` i podnieś `CACHE`.**
+- **Tryb skupienia (Pomodoro):** `SP.focus.start(taskId, min=25)` włącza stoper zadania i widget `.focus-w`; koniec → `db.stopTimer`, dźwięk (WebAudio), powiadomienie, przerwa 5 min. W oknie zadania pole „Skupienie”.
+- **Kalendarz:** `SP.exportICS(type, id)` – otwarte zadania z terminem jako wydarzenia całodniowe (RFC 5545, CRLF, escapowanie, zawijanie linii, alarm dla pilnych/wysokich). Menu przestrzeni/folderu/listy.
+
 ## Konta (bez danych demo)
 
 - Logowanie i rejestracja żyją w `app.html` (szablon `#authTpl` + `css/auth.css` + `js/login.js`): bez sesji `app.html` ładuje tylko ekran logowania (`#login` / `#register`), po zalogowaniu przeładowuje się (`#/home` albo poprzedni `#/…`). **Nie przekierowywać między plikami przy logowaniu** – Firefox potrafi trzymać osobny localStorage dla każdego pliku `file://`, co dawało pętlę login.html ⇄ app.html. `login.html` to tylko przekierowanie dla starych linków.
@@ -60,6 +75,21 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Arkusze** (`fromSheet`, tryb na arkusz, do zmiany w podglądzie): `tasks` (kolumny Zadanie/Osoba/Termin/Priorytet/Status), `invoices` (niezapłacone faktury; po terminie = pilne), `variance` (plan vs wykonanie powyżej progu %, domyślnie 10), `rows`. Wiersze „Suma/Razem” pomijane. Kwoty/kontrahenci → pola listy „Kwota” (money) i „Kontrahent” (text). `WD±n` = n-ty dzień roboczy po/przed końcem miesiąca (bez weekendów i stałych świąt PL).
 - Przykłady: notatki ze spotkania (imiona z zespołu) i skoroszyt kontrolera (`SP.sampleWorkbook()` – prawdziwy XLSX zapisany w przeglądarce, do pobrania). Testy parsera: `SP._extract`.
 
+## AI – Claude (`js/ai.js`, dodane 2026-11-20)
+
+- „Zadania z pliku” z włączonym AI: model Claude (domyślnie `claude-opus-5-5`, do wyboru Sonnet 5.5 / Haiku 5.5, effort domyślnie `high`) czyta dokument i zwraca JSON wg schematu (`output_config.format` – `json_schema`): `summary`, `warnings` (problemy w dokumencie), `new_people`, `tasks[]` (tytuł, opis, osoba, termin, priorytet, checklista, kwota, kontrahent, `source_line`/`source_sheet`/`source_quote`, `reason`). Streaming (`messages.stream(...).finalMessage()`) – na żywo pokazujemy znalezione tytuły. Dla Opus/Sonnet `fallbacks: "default"` + beta `server-side-fallback-2026-07-01`. Obsługa `refusal` i `max_tokens`, błędy przez typowane klasy SDK.
+- SDK: oficjalne `@anthropic-ai/sdk@1.5.0` jako ESM z jsDelivr (`import()` przy pierwszym użyciu), `dangerouslyAllowBrowser: true` – klucz podaje użytkownik (BYO key). SDK 1.x wysyła klucz jako `Authorization: Bearer` i `anthropic-version: 2026-10-21` – to zamierzone.
+- Klucz i ustawienia: `db.aiSettings()/saveAiSettings()` → osobny klucz localStorage `sprynt:ai:<userId>` (poza `exportData`, usuwany przy `db.wipe`). Ustawienia → sekcja „AI (Claude)” (`#ai-sec`), test klucza przez Models API (bez kosztu).
+- PDF trafia do modelu jako blok `document` (skany też), zdjęcia (PNG/JPG/WebP/GIF) jako `image` – tylko z AI. Tekst/arkusze jako numerowane linie `[N]`. Treść dokumentu to dane – prompt systemowy zakazuje wykonywania poleceń z dokumentu.
+- Bez klucza działa tryb podstawowy (reguły z `fromText/fromSheet`); w stopce okna można przełączać „Bez AI” / „Przeanalizuj z AI”.
+
+## Zaproszenia (`js/invite.js`, dodane 2026-11-20)
+
+- `SP.inviteDialog({email, name})`: e-maile/imię + wybór przestrzeni + wiadomość → link `app.html#join=<kod>` (JSON → gzip `CompressionStream` → base64url; z `file://` link prowadzi na publiczny adres GitHub Pages). Kanały: `mailto:`, WhatsApp (`wa.me`), Telegram (`t.me/share`), `sms:`, `navigator.share`, plik HTML z linkiem, kopiowanie. `db.markInvited` zapisuje kanał i datę.
+- Kod zawiera `db.shareSnapshot(spaceIds)` (przestrzenie, foldery, listy, zadania bez historii/czasu/plików, pola, dokumenty, osoby). Kto ma link, widzi te dane.
+- Dołączanie: `#join=` w `<head>` app.html → `sessionStorage["sprynt:join"]` (przetrwa rejestrację), zmiana hash na `#join=` przeładowuje stronę. Bez sesji: ekran rejestracji z banerem i wpisanym e-mailem (`login.js`). Po zalogowaniu: potwierdzenie → `db.importShared(inv)` (nowe ID, adresat zaproszenia = „me”, ponowne zaproszenie od tej samej osoby/przestrzeni = aktualizacja, `space.shared`).
+- Brak serwera = brak synchronizacji na żywo; mówimy o tym w oknie zaproszenia. Strona `#/team`: członkowie, status zaproszeń, przestrzenie udostępnione mi.
+
 ## Animacje (`js/anim.js` + sekcja „Animacje” w `css/app.css`)
 
 - Wejście widoku: `render(true)` przy zmianie trasy dodaje `.view-host.enter` (tylko wtedy – zwykłe przerysowanie po zmianie danych nie animuje). Elementy list/kart/KPI wchodzą kolejno (`--i` z `:nth-child`), słupki wykresów rosną, paski i pierścienie celów się wypełniają, liczby KPI się odliczają.
@@ -89,7 +119,7 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 
 ## Pliki
 
-- `js/data.js`: stan (`SP.db`) zalogowanego użytkownika, zapis do localStorage (`sprynt:db:<userId>`). Poza `auth.js` i `theme.js` tylko ten plik dotyka localStorage.
+- `js/data.js`: stan (`SP.db`) zalogowanego użytkownika, zapis do localStorage (`sprynt:db:<userId>`, w chmurze to lokalna kopia). Poza `auth.js`, `theme.js` i `data.js` localStorage dotykają tylko klient Supabase (sesja) i `cloud.js` przez `db.syncMeta`. `sessionStorage` używa też zaproszenie (`sprynt:join`).
   - Zmiany zawsze przez metody `SP.db.*`. One wywołują `changed()`, a powłoka przerysowuje widok.
 - `js/ui.js`: formatowanie, awatary, statusy, popovery i wybieraki (status, priorytet, osoby, termin, tagi, lista), okna `SP.form`/`SP.confirm`, toast.
 - `js/task.js`: okno szczegółów zadania (`SP.openTask(id)`).
@@ -99,7 +129,7 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 
 ## Routing
 
-- **Strony:** `#/home`, `#/inbox`, `#/my-tasks`, `#/docs`, `#/doc/<id>`, `#/cloud`, `#/settings`, `#/dashboard`, `#/goals`, `#/automations`, `#/whiteboards`, `#/wb/<id>`, `#/chat[/<spaceId>]`, `#/templates`, `#/trash`.
+- **Strony:** `#/home`, `#/inbox`, `#/my-tasks`, `#/docs`, `#/doc/<id>`, `#/cloud`, `#/settings`, `#/dashboard`, `#/goals`, `#/automations`, `#/whiteboards`, `#/wb/<id>`, `#/chat[/<spaceId>]`, `#/templates`, `#/trash`, `#/team`.
 - **Miejsca:** `#/space/<id>[/list|board|calendar]`, `#/folder/<id>[/…]`, `#/list/<id>[/…]`.
 
 ## Model danych

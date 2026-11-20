@@ -111,3 +111,21 @@ h1, h2, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+.join-ban { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; margin: 0 0 16px; border-radius: 12px; background: var(--brand-soft, #efecff); color: var(--text); border: 1px solid color-mix(in srgb, var(--brand, #6c5ce7) 35%, transparent); animation: joinIn .5s cubic-bezier(.3,1.4,.5,1); }
+.join-ban svg { color: var(--brand, #6c5ce7); flex: none; margin-top: 2px; }
+.join-ban b { display: block; font-size: 14.5px; }
+.join-ban span { font-size: 13px; opacity: .8; }
+@keyframes joinIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
+.forgot { display: block; margin: 8px 0 0 auto; font-size: 13px; font-weight: 600; color: var(--brand, #6c5ce7); background: none; border: 0; cursor: pointer; }
+.forgot[hidden] { display: none; }
+.auth-panel { display: flex; flex-direction: column; gap: 14px; animation: joinIn .4s cubic-bezier(.3,1.4,.5,1); }
+.auth-panel p { margin: 0; line-height: 1.55; }
+.auth-panel .small { font-size: 13px; }
+.auth-panel .back { align-self: center; background: none; border: 0; color: var(--brand, #6c5ce7); font-weight: 600; cursor: pointer; font-size: 14px; }
+.auth-panel .submit[disabled] { opacity: .7; }
+.ap-ico { width: 64px; height: 64px; display: grid; place-items: center; border-radius: 20px; background: var(--brand-soft, #efecff); color: var(--brand, #6c5ce7); }
+.ap-ico.bad { color: var(--danger, #e5484d); }
+.ap-ico.spin svg { animation: apSpin 1.2s linear infinite; }
+@keyframes apSpin { to { transform: rotate(360deg); } }
+#err .link { background: none; border: 0; color: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.auth-panel .muted { opacity: .7; }
