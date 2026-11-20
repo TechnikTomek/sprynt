@@ -54,9 +54,10 @@
       weak_password: ["Hasło jest za słabe – użyj dłuższego i mniej oczywistego.", "password"],
       same_password: ["Nowe hasło musi być inne niż obecne.", "next"],
       email_address_invalid: ["Ten adres e-mail jest nieprawidłowy albo zablokowany.", "email"],
-      over_email_send_rate_limit: ["Wysłaliśmy już kilka e-maili – spróbuj ponownie za kilka minut.", "email"],
       over_request_rate_limit: ["Za dużo prób – spróbuj ponownie za chwilę.", "password"],
       signup_disabled: ["Rejestracja jest teraz wyłączona.", "email"],
+      email_address_not_authorized: ["Serwer poczty Sprynt nie może jeszcze wysyłać e-maili na ten adres (darmowa poczta Supabase działa tylko dla członków projektu). Administrator musi podłączyć własny serwer poczty albo wyłączyć potwierdzanie e-maila.", "email"],
+      over_email_send_rate_limit: ["Wysłaliśmy już limit e-maili na tę godzinę – spróbuj ponownie później albo poproś administratora o podłączenie serwera poczty.", "email"],
     };
     var mapErr = function (e) {
       if (!e) return null;
