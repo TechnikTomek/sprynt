@@ -21,10 +21,10 @@
     if (!SP.views[name]) return { name: "home", params: {} };
     return { name: name, params: {} };
   }
-  function render() {
+  function render(enter) {
     var v = SP.views[route.name];
     var host = document.createElement("div");
-    host.className = "view-host";
+    host.className = "view-host" + (enter ? " enter" : "");
     v.render(host, route.params);
     view.replaceChildren(host);
     SP.hydrateIcons(host);
@@ -34,7 +34,7 @@
   }
   SP.rerender = function () { var top = view.scrollTop; render(); view.scrollTop = top; };
   SP.refreshChrome = function () { renderSidebar(); renderCrumbs(SP.views[route.name]); };
-  addEventListener("hashchange", function () { route = parse(); render(); view.scrollTop = 0; closeMobileNav(); });
+  addEventListener("hashchange", function () { route = parse(); render(true); view.scrollTop = 0; closeMobileNav(); });
   route = parse();
 
   // Każda zmiana danych odświeża widok i pasek boczny (bez przewijania na górę).
@@ -243,6 +243,7 @@
       { label: "Przestrzeń", icon: "layout-dashboard", run: newSpace },
       { label: "Dokument", icon: "file-text", run: function () { SP.newDoc(); } },
       { label: "Tablica online", icon: "presentation", run: function () { SP.newWhiteboard(); } },
+      { label: "Zadania z pliku (Word, PDF, Excel)…", icon: "sparkles", run: function () { SP.extractTasks({ listId: cur || undefined }); } },
       { label: "Zadanie z szablonu", icon: "files", run: function () { if (!db.raw.templates.length) { location.hash = "#/templates"; return; } SP.quickTask({ listId: cur || undefined, tpl: db.raw.templates[0].id }); } },
       "-",
       { label: "Cel", icon: "target", run: function () { location.hash = "#/goals"; setTimeout(function () { var b = document.querySelector("[data-new-goal]"); if (b) b.click(); }, 30); } },
@@ -250,6 +251,7 @@
     ], { align: "right" });
   });
   $("#addSpaceBtn").addEventListener("click", newSpace);
+  document.querySelector("[data-extract-open]").addEventListener("click", function () { SP.extractTasks(); });
   $("#notifBtn").addEventListener("click", function () { location.hash = "#/inbox"; });
 
   /* ---- Motyw ---- */
@@ -339,6 +341,7 @@
       ["Nowa tablica online", "presentation", function () { SP.newWhiteboard(); }],
       ["Czat", "message-square", function () { location.hash = "#/chat"; }], ["Szablony zadań", "files", function () { location.hash = "#/templates"; }],
       ["Kosz", "trash", function () { location.hash = "#/trash"; }],
+      ["Zadania z pliku (Word, PDF, Excel)", "sparkles", function () { SP.extractTasks(); }],
       ["Strona główna", "house", function () { location.hash = "#/home"; }], ["Skrzynka", "inbox", function () { location.hash = "#/inbox"; }], ["Moje zadania", "list-checks", function () { location.hash = "#/my-tasks"; }],
     ].filter(function (a) { return m(a[0]); });
     if (acts.length) groups.push(["Akcje", acts.map(function (a) { return { html: ico(a[1], 15) + "<span>" + a[0] + "</span>", run: a[2] }; })]);
@@ -386,5 +389,5 @@
     else if (e.key === "?") { e.preventDefault(); SP.showShortcuts(); }
   });
 
-  render();
+  render(true);
 })();

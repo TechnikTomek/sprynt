@@ -52,6 +52,21 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Eksport CSV:** menu przestrzeni/folderu/listy → „Eksportuj zadania (CSV)” (`SP.exportCSV`): UTF-8 z BOM, separator `;` (Excel PL), razem z polami niestandardowymi.
 - **Skróty G:** K czat, B kosz.
 
+## Zadania z pliku (dodane 2026-11-20, `js/extract.js`)
+
+- `SP.extractTasks({file|cloudId|text, listId})` – okno: wgraj plik → animacja (plik się rozkłada, skaner przesuwa się po tekście, trafione linie wylatują jako karty) → przegląd i edycja kart → „Utwórz N zadań” (karty odlatują do listy w pasku bocznym, nowe wiersze migają klasą `xt-new`). Wejścia: pasek boczny „Zadania z pliku”, menu „Nowe”, paleta, przycisk „Z pliku” w widoku listy, ikona przy pliku w Chmurze (`SP.extractFromCloud`).
+- **Formaty:** TXT/MD/LOG/HTML, CSV/TSV, DOCX/ODT/XLSX bez bibliotek (własny czytnik ZIP + `DecompressionStream("deflate-raw")`), PDF przez pdf.js 3.11.174, XLS/ODS przez SheetJS 0.18.5 – oba z cdnjs, ładowane dopiero przy takim pliku (worker pdf.js jako Blob).
+- **Tekst** (`fromText`): wypunktowania, `[ ]`/`[x]`, TODO/Zadanie:, czasowniki (lista + bezokoliczniki na „ć”), `Imię:`/`@Imię`/„Anna zrobi…”, nagłówki z imieniem lub „Ustalenia/Zadania”, pod-punkty → checklista, terminy (`parseDue`: daty, „do piątku”, „jutro”, „za tydzień”, „do końca miesiąca”, `WD+3`), priorytety (`parsePriority`), `#tagi`. Imiona z odmianą (`forms`: Marek → Marka/Markowi/Markiem). Nieznane imiona → „Dodaj do zespołu” (`db.addPerson`).
+- **Arkusze** (`fromSheet`, tryb na arkusz, do zmiany w podglądzie): `tasks` (kolumny Zadanie/Osoba/Termin/Priorytet/Status), `invoices` (niezapłacone faktury; po terminie = pilne), `variance` (plan vs wykonanie powyżej progu %, domyślnie 10), `rows`. Wiersze „Suma/Razem” pomijane. Kwoty/kontrahenci → pola listy „Kwota” (money) i „Kontrahent” (text). `WD±n` = n-ty dzień roboczy po/przed końcem miesiąca (bez weekendów i stałych świąt PL).
+- Przykłady: notatki ze spotkania (imiona z zespołu) i skoroszyt kontrolera (`SP.sampleWorkbook()` – prawdziwy XLSX zapisany w przeglądarce, do pobrania). Testy parsera: `SP._extract`.
+
+## Animacje (`js/anim.js` + sekcja „Animacje” w `css/app.css`)
+
+- Wejście widoku: `render(true)` przy zmianie trasy dodaje `.view-host.enter` (tylko wtedy – zwykłe przerysowanie po zmianie danych nie animuje). Elementy list/kart/KPI wchodzą kolejno (`--i` z `:nth-child`), słupki wykresów rosną, paski i pierścienie celów się wypełniają, liczby KPI się odliczają.
+- Ukończenie zadania: `db.updateTask`/`db.bulkUpdate` są owinięte – przejście do statusu zamkniętego → `SP.celebrate(x, y)` (konfetti z miejsca ostatniego kliknięcia) i `.just-done` na wierszu. Nowe zadanie (`db.createTask`) → `.xt-new` po przerysowaniu.
+- Strona startowa: sekcja `#z-pliku` – zapętlona scena CSS (dokument → skaner → karty zadań), pauza poza ekranem (`.xdemo:not(.in)`).
+- Wszystko wyłączone przy `prefers-reduced-motion` (CSS + wczesny `return` w `anim.js`).
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.
@@ -79,7 +94,7 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - `js/ui.js`: formatowanie, awatary, statusy, popovery i wybieraki (status, priorytet, osoby, termin, tagi, lista), okna `SP.form`/`SP.confirm`, toast.
 - `js/task.js`: okno szczegółów zadania (`SP.openTask(id)`).
 - `js/views.js`: widoki: `home`, `inbox`, `my-tasks`, `cloud`, `docs`, `doc`, `space`/`folder`/`list` (warianty Lista, Tablica, Tabela, Kalendarz, Oś czasu).
-- `js/insights.js`: `dashboard`, `goals`, `automations`. `js/whiteboard.js`: `whiteboards`, `wb`. `js/more.js`: `chat`, `templates`, `trash` + dodatki okna zadania (`SP.taskProps/taskFields/taskDeps/bindTaskExtras/taskMoreMenu`).
+- `js/insights.js`: `dashboard`, `goals`, `automations`. `js/whiteboard.js`: `whiteboards`, `wb`. `js/more.js`: `chat`, `templates`, `trash` + dodatki okna zadania (`SP.taskProps/taskFields/taskDeps/bindTaskExtras/taskMoreMenu`). `js/extract.js`: zadania z pliku.
 - `js/app.js`: powłoka: routing hash, drzewo w pasku bocznym, menu „Nowe”, szybkie tworzenie zadania (`SP.quickTask`), paleta Cmd/Ctrl+K, skróty (T/N nowe zadanie, / szukaj).
 
 ## Routing

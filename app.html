@@ -35,6 +35,7 @@
           <a class="side-item" href="index.html" title="Strona Sprynt"><span data-icon="arrow-right" data-size="18" style="transform:scaleX(-1)"></span><span>Strona Sprynt</span></a>
           <a class="side-item" href="#/home" data-route="home"><span data-icon="house" data-size="18"></span><span>Strona główna</span></a>
           <a class="side-item" href="#/inbox" data-route="inbox"><span data-icon="inbox" data-size="18"></span><span>Skrzynka</span><span class="si-count" id="inboxCount" hidden></span></a>
+          <button class="side-item side-x" type="button" data-extract-open><span data-icon="sparkles" data-size="18"></span><span>Zadania z pliku</span></button>
           <a class="side-item" href="#/chat" data-route="chat"><span data-icon="message-square" data-size="18"></span><span>Czat</span></a>
           <a class="side-item" href="#/my-tasks" data-route="my-tasks"><span data-icon="list-checks" data-size="18"></span><span>Moje zadania</span></a>
           <a class="side-item" href="#/dashboard" data-route="dashboard"><span data-icon="chart-column" data-size="18"></span><span>Pulpit</span></a>
@@ -171,7 +172,7 @@
 
   <script>
     (function () {
-      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "app"] : ["icons", "login"];
+      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "extract", "anim", "app"] : ["icons", "login"];
       if (!SP_SIGNED_IN) {
         var app = document.querySelector(".app"); if (app) app.remove();
         document.querySelectorAll(".pal-bg, .toast").forEach(function (e) { e.remove(); });

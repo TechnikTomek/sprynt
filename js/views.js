@@ -328,7 +328,7 @@
           (view === "list" || view === "board" ? '<button class="tbtn" data-act="sort">' + ico("arrow-down-up", 15) + "Sortuj: <b>" + (f.sort === "manual" ? "ręcznie" : SORTS[f.sort].toLowerCase()) + "</b></button>" : "") +
           '<button class="tbtn" data-act="me" aria-pressed="' + f.me + '">' + ico("user", 15) + "Przypisane do mnie</button>" +
           '<button class="tbtn" data-act="closed" aria-pressed="' + !f.showClosed + '">' + ico(f.showClosed ? "eye" : "eye-off", 15) + (f.showClosed ? "Ukryj ukończone" : "Pokaż ukończone") + "</button>" +
-          '<span class="grow"></span><button class="btn primary sm" data-act="add">' + ico("plus", 15) + "Zadanie</button></div>" +
+          '<span class="grow"></span><button class="btn sm" data-act="from-file" title="Wyciągnij zadania z dokumentu albo arkusza">' + ico("sparkles", 15) + 'Z pliku</button><button class="btn primary sm" data-act="add">' + ico("plus", 15) + "Zadanie</button></div>" +
           '<div class="loc-body"></div></div>';
 
         var body = el.querySelector(".loc-body");
@@ -362,6 +362,7 @@
           })));
         };
         el.querySelector('[data-act="add"]').onclick = function () { SP.quickTask({ listId: type === "list" ? p.id : firstListOf(loc) }); };
+        el.querySelector('[data-act="from-file"]').onclick = function () { SP.extractTasks({ listId: type === "list" ? p.id : firstListOf(loc) }); };
         if (p.view) db.setView(p.id, p.view);
       },
     };
@@ -646,7 +647,7 @@
             return '<div class="ft-row" data-file="' + f.id + '"><button class="ft-n" data-open>' + SP.fileTile(f) + '<span>' + esc(f.name) + '</span><small class="ext">' + SP.fileExt(f) + "</small></button>" +
               "<span>" + (t ? '<button class="ft-task" data-task="' + t.id + '">' + SP.statusDot(t.status) + "<span>" + esc(t.title) + "</span></button>" : '<span class="muted">—</span>') + "</span>" +
               '<span class="muted">' + SP.fmtSize(f.size) + '</span><span class="muted">' + SP.ago(f.uploadedAt) + "</span>" +
-              '<span class="ft-acts"><button class="ibtn" data-dl title="Pobierz">' + ico("download", 16) + '</button><button class="ibtn" data-del title="Usuń">' + ico("trash", 16) + "</button></span></div>";
+              '<span class="ft-acts">' + (SP.canExtract && SP.canExtract(f) ? '<button class="ibtn ft-x" data-extract title="Wyciągnij zadania z pliku">' + ico("sparkles", 16) + "</button>" : "") + '<button class="ibtn" data-dl title="Pobierz">' + ico("download", 16) + '</button><button class="ibtn" data-del title="Usuń">' + ico("trash", 16) + "</button></span></div>";
           }).join("") || '<div class="empty-s">Brak plików pasujących do filtra.</div>') + "</div>"
           : '<div class="empty-b">' + ico("cloud", 40) + "<h3>Twoja chmura jest pusta</h3><p class='muted'>Wgraj pliki albo dodaj załącznik w zadaniu.</p></div>") +
         '<p class="cloud-note muted">' + ico("lock", 13) + "Do czasu podłączenia serwera pliki są przechowywane na tym urządzeniu, w tej przeglądarce.</p></div>";
@@ -659,7 +660,8 @@
         var row = e.target.closest("[data-file]"); if (!row) return;
         var id = row.dataset.file, tb = e.target.closest("[data-task]");
         if (tb) { SP.openTask(tb.dataset.task); return; }
-        if (e.target.closest("[data-dl]")) SP.downloadFile(id);
+        if (e.target.closest("[data-extract]")) SP.extractFromCloud(id);
+        else if (e.target.closest("[data-dl]")) SP.downloadFile(id);
         else if (e.target.closest("[data-del]")) SP.deleteFile(id);
         else if (e.target.closest("[data-open]")) SP.previewFile(id);
       });

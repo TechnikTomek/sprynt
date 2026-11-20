@@ -367,6 +367,14 @@
     updateDoc: function (id, patch) { var d = SP.db.doc(id); if (d) { Object.assign(d, patch, { updatedAt: new Date().toISOString() }); save(); } },
     deleteDoc: function (id) { var d0 = SP.db.doc(id); if (d0) trashPush("doc", d0.title, { docs: [d0] }); data.docs = data.docs.filter(function (d) { return d.id !== id; }); changed("docs"); },
     setNotification: function (id, state) { var n = byId(data.notifications, id); if (n) { n.state = state; changed("inbox"); } },
+    /** Osoba dodana po imieniu (np. znaleziona w pliku z notatkami) – bez e-maila. */
+    addPerson: function (name) {
+      name = String(name || "").trim(); if (!name) return null;
+      var ex = data.people.find(function (p) { return p.name.toLowerCase() === name.toLowerCase(); }); if (ex) return ex;
+      var colors = ["#e84393", "#00a884", "#f39c12", "#0984e3", "#e5484d", "#2d3436"];
+      var p = { id: uid("p"), name: name, email: "", color: colors[data.people.length % colors.length], invited: true };
+      data.people.push(p); changed("people"); return p;
+    },
     /** Zaproszona osoba (lokalnie – e-mail z zaproszeniem wyślemy po podłączeniu serwera). */
     invite: function (email) {
       email = String(email).trim().toLowerCase();

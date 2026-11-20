@@ -341,3 +341,52 @@ kbd { font: 600 12px/1 var(--font); padding: 3px 6px; border-radius: 6px; backgr
 }
 
 [hidden] { display: none !important; }
+
+/* ============ Zadania z pliku – zapętlona scena (CSS) ============ */
+.xsec-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 60px; align-items: center; }
+.xsec-lead { margin: 18px 0 22px; font-size: 18px; line-height: 1.6; color: var(--text-2); max-width: 520px; }
+.xsec-list { list-style: none; padding: 0; margin: 0 0 30px; display: flex; flex-direction: column; gap: 14px; }
+.xsec-list li { display: flex; gap: 12px; align-items: flex-start; color: var(--text-2); line-height: 1.5; }
+.xsec-list b { color: var(--text); }
+.xsec-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 10px; background: var(--brand-soft); color: var(--brand); }
+.xdemo { --L: 8s; position: relative; height: 400px; }
+.xd-doc { position: absolute; left: 0; top: 20px; width: 310px; height: 340px; border-radius: 16px; background: var(--panel); box-shadow: var(--shadow-lg); overflow: hidden; animation: xdDoc var(--L) var(--ease) infinite; }
+.xd-doc-h { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px; border-bottom: 1px solid var(--line); font-weight: 650; font-size: 14px; }
+.xd-tile { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; background: #2b5cd9; color: #fff; font-size: 12px; font-weight: 800; }
+.xd-lines { padding: 10px 0; }
+.xd-lines p { margin: 0; height: 34px; display: flex; align-items: center; padding: 0 16px; font-size: 13.5px; color: var(--text-2); border-left: 3px solid transparent; white-space: nowrap; overflow: hidden; }
+.xd-lines .hit { animation: xdHit var(--L) ease infinite backwards; animation-delay: calc(var(--t) * 1s); }
+.xd-scan { position: absolute; left: 0; right: 0; top: 56px; height: 3px; background: linear-gradient(90deg, transparent, var(--brand) 20%, #e84393 80%, transparent); box-shadow: 0 0 18px 4px color-mix(in srgb, var(--brand) 50%, transparent); opacity: 0; animation: xdScan var(--L) linear infinite; }
+.xd-scan::after { content: ""; position: absolute; left: 0; right: 0; bottom: 3px; height: 60px; background: linear-gradient(to top, color-mix(in srgb, var(--brand) 14%, transparent), transparent); }
+.xd-list { position: absolute; left: 340px; top: 0; right: 0; height: 400px; }
+.xd-list-h { display: flex; align-items: center; gap: 10px; height: 44px; font-weight: 700; font-size: 15px; }
+.xd-n { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding: 0 8px; border-radius: 12px; background: var(--brand); color: #fff; font-size: 13px; }
+.xd-n::after { content: "0"; animation: xdCount var(--L) steps(1) infinite; }
+.xd-card { position: absolute; left: 0; right: 0; height: 54px; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 0 14px; border-radius: 12px; background: var(--panel); box-shadow: var(--shadow-md); border-left: 3px solid var(--brand); opacity: 0; animation: xdFly var(--L) cubic-bezier(.25,.8,.25,1) infinite backwards; animation-delay: calc(var(--t) * 1s + .1s); }
+.xd-card b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xd-card span { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
+.xd-card em { font-style: normal; } .xd-card em.red { color: #e5484d; font-weight: 600; }
+.xd-av { width: 18px; height: 18px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--c); color: #fff; font-style: normal; font-size: 8px; font-weight: 700; }
+.xdemo:not(.in) *, .xdemo:not(.in) *::after { animation-play-state: paused !important; }
+@keyframes xdDoc { 0% { opacity: 0; transform: translateY(16px) scale(.94) rotate(-2deg); } 8%, 86% { opacity: 1; transform: none; } 95%, 100% { opacity: 0; transform: translateY(-8px) scale(.98); } }
+@keyframes xdScan { 0%, 9% { top: 56px; opacity: 0; } 11% { opacity: 1; } 40% { top: 330px; opacity: 1; } 43%, 100% { top: 330px; opacity: 0; } }
+@keyframes xdHit { 0% { background: transparent; border-left-color: transparent; color: var(--text-2); } 2%, 68% { background: var(--brand-soft); border-left-color: var(--brand); color: var(--text); } 76%, 100% { background: transparent; border-left-color: transparent; color: var(--text-2); } }
+@keyframes xdFly {
+  0% { opacity: 0; transform: translate(-330px, var(--dy)) scale(.6, .5); }
+  1% { opacity: 1; }
+  5% { transform: translate(-165px, calc(var(--dy) * .5 - 50px)) scale(.9) rotate(-5deg); }
+  10% { transform: none; }
+  12% { transform: scale(1.03); }
+  14%, 66% { opacity: 1; transform: none; }
+  74%, 100% { opacity: 0; transform: translateX(20px); }
+}
+@keyframes xdCount { 0% { content: "0"; } 15% { content: "1"; } 22.5% { content: "2"; } 30% { content: "3"; } 34% { content: "4"; } 90% { content: "0"; } }
+@media (max-width: 900px) {
+  .xsec-grid { grid-template-columns: 1fr; gap: 30px; }
+  .xdemo { transform: scale(.82); transform-origin: 0 0; height: 330px; width: 120%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xdemo *, .xdemo *::after { animation: none !important; }
+  .xd-card { opacity: 1; } .xd-scan { display: none; } .xd-n::after { content: "4"; }
+  .xd-lines .hit { background: var(--brand-soft); border-left-color: var(--brand); color: var(--text); }
+}

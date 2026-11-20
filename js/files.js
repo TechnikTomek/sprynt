@@ -86,6 +86,7 @@
         var id = uid();
         return tx("readwrite", function (st) { return st.put(f, key(id)); }).then(function () {
           db.addFile({ id: id, name: f.name, size: f.size, type: f.type || "", uploadedAt: new Date().toISOString(), taskId: opts.taskId || null, by: "me" });
+          if (opts.ids) opts.ids.push(id);
           if (opts.taskId) db.updateTask(opts.taskId, {}, "dodał(a) załącznik „" + f.name + "”");
           done++;
         });
@@ -99,6 +100,8 @@
     });
   };
   function blobOf(id) { return tx("readonly", function (st) { return st.get(key(id)); }); }
+  /** Zawartość pliku z chmury (Blob) albo null. */
+  SP.fileBlob = blobOf;
   SP.downloadFile = function (id) {
     var f = db.file(id); if (!f) return;
     blobOf(id).then(function (b) {
