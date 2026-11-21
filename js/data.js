@@ -465,6 +465,8 @@
     toggleExpanded: function (id) { data.ui.expanded[id] = !data.ui.expanded[id]; changed("tree"); },
     viewFor: function (locId) { return data.ui.views[locId] || "list"; },
     setView: function (locId, v) { data.ui.views[locId] = v; save(); },
+    /** Zapis ustawień interfejsu bez przerysowania widoku (np. pozycja D3vka). */
+    saveUi: function () { save(); },
     addRecent: function (type, id) {
       data.recents = [{ type: type, id: id, at: new Date().toISOString() }].concat(data.recents.filter(function (r) { return !(r.type === type && r.id === id); })).slice(0, 12);
       save();

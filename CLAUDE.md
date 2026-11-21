@@ -97,6 +97,18 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - Strona startowa: sekcja `#z-pliku` – zapętlona scena CSS (dokument → skaner → karty zadań), pauza poza ekranem (`.xdemo:not(.in)`).
 - Wszystko wyłączone przy `prefers-reduced-motion` (CSS + wczesny `return` w `anim.js`).
 
+## Magia, kreator, podsumowanie, D3vek (dodane 2026-11-21)
+
+- **`js/magic.js`** – `SP.parseQuick(text)` (wspólny parser z `extract.js` przez `SP._extract`): „Wysłać ofertę jutro @Anna !pilne #klient” → tytuł, termin, osoby (`@Imię`, także odmiana; nieznane → nowa osoba), priorytet (`!pilne`/`!2`/`!!!`/słowa), tagi. `SP.smartInput(input, {chips, target, onChange})` podświetla fragmenty w polu (nakładka `.smart-hl` pod przezroczystym inputem) i wysyła „duszka” frazy do chipa (`SP.fly`). Włączane przy pierwszym fokusie pól `.add-row`, `.col-add`, podzadań i w `SP.quickTask`; zapis przez `SP.smartFields(input, base)`. **Uwaga:** przeniesienie pola w DOM zdejmuje fokus – `smartInput` go przywraca (flaga `_smartInit` chroni przed rekurencją focusin).
+  - Wklejenie ≥2 linii w te pola → `SP.pasteTasks(text, base)`: skaner po liniach, karty wylatują, wcięte punkty = checklista, `[x]` = ukończone, nagłówki z „:” pomijane.
+  - `SP.splitTask(id)` – rozbijanie na podzadania: lista kontrolna → punkty opisu → tytuł („X i Y”), albo AI (`SP.ai.breakdown`). Przycisk „Rozbij zadanie” w sekcji Podzadania i w menu ⋯.
+- **FLIP** (`anim.js`): `SP.rerender` woła `SP.flipSnap()`/`SP.flipPlay()` – zadania przelatują na nowe miejsce; `SP.flipDrop = {id,x,y,t}` po upuszczeniu na tablicy/kalendarzu = „lądowanie”.
+- **`js/recap.js`** – `SP.weekRecap()`: 5 plansz (ukończone, najlepszy dzień, czas, podium zespołu, następny tydzień), auto-przewijanie 6 s, spacja = pauza, kopiowanie podsumowania. Wejścia: Strona główna, Pulpit, paleta.
+- **`js/onboard.js`** – kreator po założeniu konta (puste konto bez `db.raw.profile`, nie przy `#join`): rola (IT, kontroler finansowy, marketing, sprzedaż, PM, HR, projektant, szkoła, osobiste), zespół, nazwa przestrzeni/folderu/list, przykładowe zadania i pola, zaproszenie (`SP.inviteDialog`). Przerabia pusty projekt z rejestracji. `db.raw.profile = {role, team}`. Ponownie: Ustawienia → „Kreator konfiguracji” (`SP.onboarding()`).
+- **`js/d3vek.js`** – D3vek (niebieski przyjaciel z aplikacji D3vek na Mac/Windows, #00A0FF, proporcje 200×132): oczy za kursorem, mruganie, sen po 2 min, dwuklik = salto, przeciąganie (`db.raw.ui.d3`, zapis `db.saveUi()`), wyłączenie `db.raw.ui.d3off` (Ustawienia). Rozmowa: polecenia po polsku na regułach, z kluczem AI wolne pytania (`SP.ai.chat`). Plik upuszczony na D3vka → scena: skok na dokument, nurkowanie, kopanie po liniach, karty zadań wylatują, powrót → `SP.extractTasks({file})` z `SP.extractSkipScan` (bez drugiego skanowania).
+- **Ikony dodane:** `split`, `trophy`, `wand-sparkles`, `rocket` (thesvg, glass).
+- **Testy:** `app.html` ma podłączone Supabase – testy rób na kopii z `window.SPRYNT_CLOUD = null` po `config.js` (inaczej rejestracja trafi do prawdziwej chmury). Kopię usuń po teście.
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.

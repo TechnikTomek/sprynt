@@ -736,7 +736,9 @@
     var cards = S.body.querySelector(".xt-cards");
     S.tasks.forEach(function (t) { var c = SP.el(cardHTML(t)); c.style.visibility = "hidden"; cards.appendChild(c); });
     SP.hydrateIcons(cards); bindCards();
-    if (reduce || SP.extractInstant) { if (S.aiMode) think(true); else reveal(true); return; }
+    // D3vek (js/d3vek.js) właśnie „wygrzebał” zadania na własnej animacji – bez drugiego skanowania
+    var skip = SP.extractSkipScan && !S.aiMode; SP.extractSkipScan = false;
+    if (reduce || SP.extractInstant || skip) { if (S.aiMode) think(true); else reveal(true); return; }
     // 1) plik „rozkłada się” w dokument
     var doc = S.body.querySelector(".xt-doc"), res2 = S.body.querySelector(".xt-res");
     var a1 = doc.animate([{ clipPath: "inset(0 0 100% 0 round 14px)", transform: "translateY(10px)" }, { clipPath: "inset(0 0 0% 0 round 14px)", transform: "none" }], { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)" });
@@ -1066,6 +1068,6 @@
     (SP.flashTasks || []).forEach(function (id) { document.querySelectorAll('[data-task="' + id + '"]').forEach(function (r) { r.classList.remove("xt-new"); void r.offsetWidth; r.classList.add("xt-new"); }); });
   }
 
-  /* Dostęp do parsera (testy). */
-  SP._extract = { readSource: readSource, fromText: fromText, fromSheet: fromSheet, parseDue: parseDue, parseAmount: parseAmount, workday: workday, sampleNotes: sampleNotes, sampleBook: sampleBook, linesFrom: linesFrom };
+  /* Dostęp do parsera (testy i js/magic.js – szybkie dodawanie, wklejanie wielu zadań). */
+  SP._extract = { extract: function (src) { return extract(src, { threshold: 10, modes: {} }); }, readSource: readSource, fromText: fromText, fromSheet: fromSheet, parseDue: parseDue, parsePriority: parsePriority, People: People, cleanTitle: cleanTitle, isVerbish: isVerbish, parseAmount: parseAmount, workday: workday, sampleNotes: sampleNotes, sampleBook: sampleBook, linesFrom: linesFrom };
 })();

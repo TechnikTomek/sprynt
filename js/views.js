@@ -145,7 +145,8 @@
       }).join("");
 
       el.innerHTML =
-        '<div class="page home"><div class="home-head"><div><h1>' + hello + "</h1><p class='muted'>" + cap(new Date().toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" })) + "</p></div></div>" +
+        '<div class="page home"><div class="home-head"><div><h1>' + hello + "</h1><p class='muted'>" + cap(new Date().toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" })) + "</p></div>" +
+        (SP.weekRecap ? '<button class="recap-btn" data-recap title="Twój tydzień w liczbach">' + ico("trophy", 18) + "<span><b>Podsumowanie tygodnia</b><small>" + weekDone() + "</small></span></button>" : "") + "</div>" +
         '<div class="home-grid">' +
         '<section class="card span2"><div class="card-h"><h2>Moje zadania</h2><div class="seg"><button data-tab="open" aria-pressed="' + (tab === "open") + '">Do zrobienia <span>' + mineOpen.length + '</span></button><button data-tab="done" aria-pressed="' + (tab === "done") + '">Ukończone <span>' + mineDone.length + '</span></button></div><a class="card-link" href="#/my-tasks">Wszystkie</a></div>' +
         '<div class="card-b">' + (mine || '<div class="empty-s">Nic tu nie ma. Dobra robota!</div>') + "</div></section>" +
@@ -155,6 +156,7 @@
         '<section class="card"><div class="card-h"><h2>Postęp przestrzeni</h2></div><div class="card-b">' + progress + "</div></section>" +
         "</div></div>";
       el.querySelectorAll("[data-tab]").forEach(function (b) { b.onclick = function () { views.home.tab = b.dataset.tab; SP.rerender(); }; });
+      var rb = el.querySelector("[data-recap]"); if (rb) rb.onclick = function () { SP.weekRecap(); };
       bindTaskClicks(el);
     },
   };
@@ -181,6 +183,10 @@
       else if (w === "doc") SP.newDoc(s && s.id);
       else if (w === "space") document.getElementById("addSpaceBtn").click();
     });
+  }
+  function weekDone() {
+    var from = SP.date.add(SP.date.today(), -6), n = db.raw.tasks.filter(function (t) { return t.doneAt && db.status(t.status).closed && SP.date.ymd(new Date(t.doneAt)) >= from; }).length;
+    return n ? "ukończono " + n + " w 7 dni" : "zobacz swój tydzień";
   }
   function compactRow(t) {
     var d = SP.fmtDue(t.due, db.status(t.status).closed);
@@ -408,7 +414,7 @@
         e.preventDefault();
         var inp = form.querySelector("input"), v = inp.value.trim(); if (!v) return;
         var fields = JSON.parse(form.dataset.add);
-        db.createTask(Object.assign({ title: v, assignees: fields.assignees || [] }, fields));
+        db.createTask(SP.smartFields ? SP.smartFields(inp, Object.assign({ assignees: [] }, fields)) : Object.assign({ title: v, assignees: fields.assignees || [] }, fields));
         var key = form.closest("[data-grp]").dataset.grp;
         setTimeout(function () { var again = document.querySelector('[data-grp="' + key + '"] .add-row input'); if (again) again.focus(); }, 0);
       });
@@ -528,7 +534,7 @@
       var items = tasks.filter(function (t) { return t.status === s.id; });
       return '<section class="col" data-status="' + s.id + '" style="--c:' + s.color + '"><div class="col-h"><span class="st-pill" style="--c:' + s.color + '">' + esc(s.name) + '</span><span class="grp-n">' + items.length + "</span></div>" +
         '<div class="col-b">' + items.map(cardHTML).join("") + "</div>" +
-        (listId ? '<form class="col-add"><span class="add-plus">' + ico("plus", 14) + '</span><input placeholder="Nowe zadanie" /></form>' : "") + "</section>";
+        (listId ? '<form class="col-add" data-add="' + esc(JSON.stringify({ listId: listId, status: s.id })) + '"><span class="add-plus">' + ico("plus", 14) + '</span><input placeholder="Nowe zadanie" /></form>' : "") + "</section>";
     }).join("") + "</div>";
     var dragId = null;
     body.querySelectorAll(".card-t").forEach(function (c) {
@@ -536,17 +542,18 @@
       c.addEventListener("dragend", function () { c.classList.remove("dragging"); body.querySelectorAll(".col").forEach(function (x) { x.classList.remove("over"); }); });
     });
     body.querySelectorAll(".col").forEach(function (col) {
-      col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("over"); });
+      col.addEventListener("dragover", function (e) { e.preventDefault(); if (!col.classList.contains("over")) { body.querySelectorAll(".col.over").forEach(function (x) { x.classList.remove("over"); }); col.classList.add("over"); } });
       col.addEventListener("dragleave", function (e) { if (!col.contains(e.relatedTarget)) col.classList.remove("over"); });
       col.addEventListener("drop", function (e) {
         e.preventDefault(); col.classList.remove("over");
         var id = dragId || e.dataTransfer.getData("text/plain"), t = db.task(id);
+        if (t && t.status !== col.dataset.status) SP.flipDrop = { id: id, x: e.clientX, y: e.clientY, t: Date.now() };
         if (t && t.status !== col.dataset.status) db.updateTask(id, { status: col.dataset.status }, "zmienił(a) status na " + db.status(col.dataset.status).name);
       });
       var form = col.querySelector(".col-add");
       if (form) form.addEventListener("submit", function (e) {
         e.preventDefault(); var inp = form.querySelector("input"), v = inp.value.trim(); if (!v) return;
-        db.createTask({ listId: listId, title: v, status: col.dataset.status });
+        db.createTask(SP.smartFields ? SP.smartFields(inp, { listId: listId, status: col.dataset.status, assignees: [] }) : { listId: listId, title: v, status: col.dataset.status });
         var st = col.dataset.status;
         setTimeout(function () { var again = document.querySelector('.col[data-status="' + st + '"] .col-add input'); if (again) again.focus(); }, 0);
       });
@@ -605,7 +612,7 @@
       day.addEventListener("drop", function (e) {
         e.preventDefault(); day.classList.remove("over");
         var id = dragId || e.dataTransfer.getData("text/plain");
-        if (id) db.updateTask(id, { due: day.dataset.day }, "przesunął/przesunęła termin");
+        if (id) { SP.flipDrop = { id: id, x: e.clientX, y: e.clientY, t: Date.now() }; db.updateTask(id, { due: day.dataset.day }, "przesunął/przesunęła termin"); }
       });
       day.addEventListener("dblclick", function (e) {
         if (e.target.closest(".cal-t")) return;

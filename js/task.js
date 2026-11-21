@@ -73,6 +73,7 @@
     if (!silent && SP.afterTaskClose) SP.afterTaskClose();
   }
   SP.closeTask = close;
+  SP.currentTaskId = function () { return open ? open.id : null; };
 
   function flushEdits() {
     if (!open) return;
@@ -162,7 +163,9 @@
   }
   function subtasksHTML(t) {
     var subs = db.subtasks(t.id), done = subs.filter(function (s) { return db.status(s.status).closed; }).length;
-    return '<div class="tm-sec"><div class="tm-sec-h">' + ico("git-branch", 15) + "Podzadania" + (subs.length ? '<span class="muted">' + done + "/" + subs.length + "</span>" : "") + "</div>" +
+    return '<div class="tm-sec"><div class="tm-sec-h">' + ico("git-branch", 15) + "Podzadania" + (subs.length ? '<span class="muted">' + done + "/" + subs.length + "</span>" : "") +
+      (SP.splitTask ? '<button class="tm-sec-add" data-split title="Rozbij na mniejsze kroki – z listy kontrolnej, opisu albo przez AI">' + ico("split", 14) + "Rozbij zadanie</button>" : "") + "</div>" +
+      (subs.length ? '<div class="progress sub-prog"><i style="width:' + Math.round(done / subs.length * 100) + '%"></i></div>' : "") +
       '<div class="sub-list">' + subs.map(function (s) {
         var d = SP.fmtDue(s.due, db.status(s.status).closed);
         return '<div class="sub-row' + (db.status(s.status).closed ? " closed" : "") + '"><button class="st-btn" data-sub-status="' + s.id + '" title="Zmień status">' + SP.statusDot(s.status) + '</button><button class="sub-title" data-open="' + s.id + '">' + esc(s.title) + "</button>" +
@@ -205,6 +208,7 @@
       if (!ms) { SP.toast("Nie rozumiem czasu. Wpisz np. 1h 30m, 45m albo 90 (minuty)."); inp.focus(); return; }
       db.addTime(t().id, ms); SP.toast("Dodano " + db.fmtDuration(ms));
     }, true);
+    var sp = main.querySelector("[data-split]"); if (sp) sp.onclick = function () { flushEdits(); SP.splitTask(t().id); };
     main.querySelectorAll("[data-attach]").forEach(function (b) { b.onclick = function () { SP.pickFiles({ taskId: t().id }); }; });
     main.querySelectorAll("[data-file]").forEach(function (row) {
       var id = row.dataset.file;
@@ -237,7 +241,8 @@
         e.preventDefault();
         var inp = f.querySelector("input"), v = inp.value.trim(); if (!v) return;
         if (f.dataset.form === "sub") {
-          db.createTask({ listId: t().listId, parentId: t().id, title: v, assignees: [] });
+          if (SP.smartFields) { var sf = SP.smartFields(inp, { listId: t().listId, parentId: t().id, assignees: [] }); v = sf.title; db.createTask(sf); }
+          else db.createTask({ listId: t().listId, parentId: t().id, title: v, assignees: [] });
           db.updateTask(t().id, {}, "dodał(a) podzadanie „" + v + "”");
         } else {
           db.updateTask(t().id, { checklist: t().checklist.concat([{ id: Math.random().toString(36).slice(2, 8), text: v, done: false }]) });

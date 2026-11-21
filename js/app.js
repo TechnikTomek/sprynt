@@ -32,7 +32,8 @@
     document.title = v.title(route.params) + " · Sprynt";
     renderSidebar();
   }
-  SP.rerender = function () { var top = view.scrollTop; render(); view.scrollTop = top; };
+  // flipSnap/flipPlay (js/anim.js): zadania, które zmieniły miejsce, płynnie przelatują na nowe (FLIP).
+  SP.rerender = function () { var snap = SP.flipSnap ? SP.flipSnap() : null; var top = view.scrollTop; render(); view.scrollTop = top; if (snap) SP.flipPlay(snap); };
   SP.refreshChrome = function () { renderSidebar(); renderCrumbs(SP.views[route.name]); };
   addEventListener("hashchange", function () { route = parse(); render(true); view.scrollTop = 0; closeMobileNav(); });
   route = parse();
@@ -183,19 +184,22 @@
     if (!st.listId) { SP.toast("Najpierw utwórz listę"); return; }
     var bg = SP.el('<div class="dlg-bg"><form class="dlg qt" role="dialog" aria-modal="true" aria-label="Nowe zadanie">' +
       '<div class="qt-top"><button type="button" class="qt-loc" data-k="list"></button><button type="button" class="ibtn" data-x>' + ico("x", 17) + "</button></div>" +
-      '<input class="qt-title" placeholder="Nazwa zadania" required maxlength="200" />' +
+      '<input class="qt-title" placeholder="Nazwa zadania – np. Wysłać ofertę jutro @Anna !pilne #klient" required maxlength="200" />' +
+      '<div class="sm-chips qt-chips" hidden></div>' +
       '<div class="qt-desc" contenteditable="true" data-ph="Dodaj opis (opcjonalnie)"></div>' +
       '<div class="qt-props"></div>' +
       '<div class="dlg-acts"><span class="muted qt-hint">Enter tworzy zadanie</span><button type="submit" class="btn primary">Utwórz zadanie</button></div></form></div>');
+    var parsed = null; // wynik SP.parseQuick z pola nazwy (termin, osoby, priorytet, tagi wpisane tekstem)
     function draw() {
       var l = db.list(st.listId), s = db.space(l.spaceId);
       bg.querySelector(".qt-loc").innerHTML = SP.spaceIcon(s, "xs") + esc(s.name) + " / " + esc(l.name) + ico("chevron-down", 12);
-      var d = SP.fmtDue(st.due);
+      var pp = parsed || { assignees: [], newPeople: [] }, due = pp.due || st.due, prio = pp.priority || st.priority, who = pp.assignees.length ? pp.assignees : st.assignees;
+      var d = SP.fmtDue(due);
       bg.querySelector(".qt-props").innerHTML =
         '<button type="button" class="chip-btn" data-k="status">' + SP.statusDot(st.status) + esc(db.status(st.status).name) + "</button>" +
-        '<button type="button" class="chip-btn" data-k="assignees">' + (st.assignees.length ? SP.avatars(st.assignees, "xs") : ico("user", 14) + "Przypisz") + "</button>" +
-        '<button type="button" class="chip-btn" data-k="due">' + ico("calendar", 14) + (st.due ? '<span class="due ' + d.cls + '">' + d.label + "</span>" : "Termin") + "</button>" +
-        '<button type="button" class="chip-btn" data-k="priority">' + (st.priority ? SP.flag(st.priority, true) : ico("flag", 14) + "Priorytet") + "</button>" +
+        '<button type="button" class="chip-btn' + (pp.assignees.length || pp.newPeople.length ? " magic" : "") + '" data-k="assignees">' + (who.length ? SP.avatars(who, "xs") : ico("user", 14) + "Przypisz") + (pp.newPeople.length ? "<span>+ " + esc(pp.newPeople.join(", ")) + "</span>" : "") + "</button>" +
+        '<button type="button" class="chip-btn' + (pp.due ? " magic" : "") + '" data-k="due">' + ico("calendar", 14) + (due ? '<span class="due ' + d.cls + '">' + d.label + "</span>" : "Termin") + "</button>" +
+        '<button type="button" class="chip-btn' + (pp.priority ? " magic" : "") + '" data-k="priority">' + (prio ? SP.flag(prio, true) : ico("flag", 14) + "Priorytet") + "</button>" +
         (db.raw.templates.length ? '<button type="button" class="chip-btn' + (st.tpl ? " on" : "") + '" data-k="tpl">' + ico("files", 14) + (st.tpl ? "Szablon: " + esc((db.raw.templates.find(function (x) { return x.id === st.tpl; }) || {}).name || "") : "Z szablonu") + "</button>" : "");
       SP.hydrateIcons(bg);
     }
@@ -214,23 +218,32 @@
         } };
       })).concat(st.tpl ? ["-", { label: "Bez szablonu", icon: "x", run: function () { st.tpl = null; draw(); } }] : []));
     });
-    function close() { bg.remove(); document.removeEventListener("keydown", onKey, true); }
+    function close() { bg.remove(); document.removeEventListener("keydown", onKey, true); SP.quickTaskState = null; SP.closeQuickTask = null; }
     function onKey(e) { if (e.key === "Escape" && !document.querySelector(".popover")) { e.stopPropagation(); close(); } }
+    // dla js/magic.js: wklejenie kilku linii w nazwę zamienia okno w „Wklejone zadania”
+    SP.quickTaskState = function () { return { listId: st.listId, status: st.status, assignees: st.assignees, due: st.due, priority: st.priority }; };
+    SP.closeQuickTask = close;
     document.addEventListener("keydown", onKey, true);
     bg.querySelector("[data-x]").onclick = close;
     bg.addEventListener("mousedown", function (e) { if (e.target === bg) close(); });
     bg.querySelector("form").addEventListener("submit", function (e) {
       e.preventDefault();
-      var title = bg.querySelector(".qt-title").value.trim(); if (!title) return;
+      var inp = bg.querySelector(".qt-title"); if (!inp.value.trim()) return;
       var desc = bg.querySelector(".qt-desc");
-      var t = st.tpl ? db.fromTemplate(st.tpl, st.listId, Object.assign({ title: title, status: st.status, assignees: st.assignees, due: st.due, priority: st.priority }, desc.innerText.trim() ? { desc: desc.innerHTML } : {}))
-        : db.createTask({ listId: st.listId, title: title, status: st.status, assignees: st.assignees, due: st.due, priority: st.priority, desc: desc.innerText.trim() ? desc.innerHTML : "" });
+      var f = SP.smartFields ? SP.smartFields(inp, { status: st.status, assignees: st.assignees, due: st.due, priority: st.priority }) : { title: inp.value.trim(), status: st.status, assignees: st.assignees, due: st.due, priority: st.priority };
+      if (desc.innerText.trim()) f.desc = desc.innerHTML;
+      var t = st.tpl ? db.fromTemplate(st.tpl, st.listId, f) : db.createTask(Object.assign({ listId: st.listId }, f));
       close();
       SP.toast("Utworzono " + db.taskKey(t) + " w liście " + db.list(st.listId).name);
     });
     document.body.appendChild(bg);
     draw();
     if (pre.title) bg.querySelector(".qt-title").value = pre.title;
+    if (SP.smartInput) SP.smartInput(bg.querySelector(".qt-title"), {
+      chips: bg.querySelector(".qt-chips"),
+      target: function (k) { return bg.querySelector('.qt-props [data-k="' + ({ due: "due", priority: "priority", person: "assignees", newperson: "assignees" })[k] + '"]'); },
+      onChange: function (p) { parsed = p; draw(); },
+    });
     bg.querySelector(".qt-title").focus();
   };
 
@@ -245,12 +258,24 @@
       { label: "Dokument", icon: "file-text", run: function () { SP.newDoc(); } },
       { label: "Tablica online", icon: "presentation", run: function () { SP.newWhiteboard(); } },
       { label: "Zadania z pliku (Word, PDF, Excel)…", icon: "sparkles", run: function () { SP.extractTasks({ listId: cur || undefined }); } },
+      { label: "Wiele zadań z listy (wklej)…", icon: "wand-sparkles", run: function () { pasteFromClipboard(cur); } },
       { label: "Zadanie z szablonu", icon: "files", run: function () { if (!db.raw.templates.length) { location.hash = "#/templates"; return; } SP.quickTask({ listId: cur || undefined, tpl: db.raw.templates[0].id }); } },
       "-",
       { label: "Cel", icon: "target", run: function () { location.hash = "#/goals"; setTimeout(function () { var b = document.querySelector("[data-new-goal]"); if (b) b.click(); }, 30); } },
       { label: "Automatyzacja", icon: "zap", run: function () { location.hash = "#/automations"; setTimeout(function () { var b = document.querySelector("[data-new-auto]"); if (b) b.click(); }, 30); } },
     ], { align: "right" });
   });
+  /** Wiele zadań naraz: schowek (jeśli przeglądarka pozwala) albo pole do wklejenia. */
+  function pasteFromClipboard(listId) {
+    listId = listId || (route.name === "list" ? route.params.id : undefined);
+    var ask = function () {
+      SP.form({ title: "Wiele zadań naraz", submit: "Dalej", fields: [{ name: "text", label: "Wklej listę – każda linia to zadanie (terminy, @osoby, !priorytety i #tagi rozpoznam sam)", type: "textarea", placeholder: "- Wysłać ofertę jutro @Anna\n- Zamówić druk do piątku !pilne\n  - sprawdzić nakład", required: true }] })
+        .then(function (v) { if (v && v.text && !SP.pasteTasks(v.text, { listId: listId })) SP.toast("Nie znalazłem zadań w tym tekście"); });
+    };
+    if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(function (t) { if (t && t.split(/\n/).filter(function (l) { return l.trim(); }).length >= 2) SP.pasteTasks(t, { listId: listId }); else ask(); }, ask);
+    else ask();
+  }
+  SP.pasteFromClipboard = pasteFromClipboard;
   $("#addSpaceBtn").addEventListener("click", newSpace);
   document.querySelector("[data-extract-open]").addEventListener("click", function () { SP.extractTasks(); });
   $("#notifBtn").addEventListener("click", function () { location.hash = "#/inbox"; });
@@ -343,6 +368,8 @@
       ["Zaproś znajomych", "users", function () { SP.inviteDialog(); }], ["Zespół", "users", function () { location.hash = "#/team"; }],
       ["Ustawienia AI", "sparkles", function () { location.hash = "#/settings"; setTimeout(function () { var a = document.getElementById("ai-sec"); if (a) a.scrollIntoView({ behavior: "smooth" }); }, 120); }],
       ["Zadania z pliku (Word, PDF, Excel)", "sparkles", function () { SP.extractTasks(); }],
+      ["Wklej listę zadań (wiele naraz)", "wand-sparkles", function () { pasteFromClipboard(); }],
+      ["Podsumowanie tygodnia", "trophy", function () { if (SP.weekRecap) SP.weekRecap(); }],
       ["Strona główna", "house", function () { location.hash = "#/home"; }], ["Skrzynka", "inbox", function () { location.hash = "#/inbox"; }], ["Moje zadania", "list-checks", function () { location.hash = "#/my-tasks"; }],
     ].filter(function (a) { return m(a[0]); });
     if (acts.length) groups.push(["Akcje", acts.map(function (a) { return { html: ico(a[1], 15) + "<span>" + a[0] + "</span>", run: a[2] }; })]);

@@ -7,7 +7,7 @@
   var SP = window.SP, db = SP.db;
   if (!db) return;
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce) { SP.celebrate = function () {}; return; }
+  if (reduce) { SP.celebrate = function () {}; return; } // bez SP.flipSnap – przerysowanie bez animacji
 
   /* ---- gdzie użytkownik ostatnio kliknął (punkt startu konfetti) ---- */
   var last = { x: innerWidth / 2, y: innerHeight / 2, t: 0 };
@@ -85,6 +85,59 @@
       })();
     });
   }
+
+  /* ---- FLIP: zadania płynnie przelatują na nowe miejsce po przerysowaniu ----
+   * SP.rerender (app.js) woła flipSnap() przed i flipPlay(snap) po przerysowaniu. Ten sam [data-task]
+   * (n-te wystąpienie) w innym miejscu → animacja z różnicy położeń do zera. Po upuszczeniu karty
+   * (SP.flipDrop = {id, x, y}) karta „ląduje” z punktu upuszczenia. Liczniki grup podskakują przy zmianie. */
+  var MAX_FLIP = 350;
+  function keyed(root) {
+    var seen = {}, out = [];
+    var els = root.querySelectorAll("[data-task]");
+    for (var i = 0; i < els.length && out.length < MAX_FLIP; i++) {
+      var el = els[i]; if (el.closest(".tm-bg,.popover")) continue;
+      var id = el.dataset.task, n = seen[id] = (seen[id] || 0) + 1;
+      out.push({ k: id + "#" + n, el: el });
+    }
+    return out;
+  }
+  function counters(root) {
+    var m = {};
+    root.querySelectorAll("[data-grp] .grp-n, .col[data-status] .grp-n").forEach(function (el) {
+      var host = el.closest("[data-grp]") || el.closest("[data-status]"); m[host.dataset.grp || host.dataset.status] = el.textContent;
+    });
+    return m;
+  }
+  SP.flipSnap = function () {
+    if (document.hidden) return null;
+    var map = {}; keyed(view).forEach(function (x) { map[x.k] = x.el.getBoundingClientRect(); });
+    return { rects: map, counts: counters(view) };
+  };
+  SP.flipPlay = function (snap) {
+    var vh = innerHeight, drop = SP.flipDrop && Date.now() - SP.flipDrop.t < 1500 ? SP.flipDrop : null;
+    SP.flipDrop = null;
+    keyed(view).forEach(function (x) {
+      var r = x.el.getBoundingClientRect(), id = x.k.split("#")[0];
+      if (drop && drop.id === id && x.k.slice(-2) === "#1") {
+        var ddx = drop.x - (r.left + r.width / 2), ddy = drop.y - (r.top + r.height / 2);
+        x.el.animate([{ transform: "translate(" + ddx + "px," + ddy + "px) rotate(3deg) scale(1.05)", boxShadow: "0 18px 40px -12px rgba(0,0,0,.35)", zIndex: 5 },
+          { transform: "translate(" + ddx * .05 + "px," + ddy * .05 + "px) rotate(-.6deg) scale(1.01)", offset: .75 }, { transform: "none", boxShadow: "none" }],
+          { duration: 460, easing: "cubic-bezier(.2,.9,.3,1.15)" });
+        return;
+      }
+      var o = snap.rects[x.k]; if (!o) return;
+      var dx = o.left - r.left, dy = o.top - r.top;
+      if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+      if ((o.bottom < 0 || o.top > vh) && (r.bottom < 0 || r.top > vh)) return; // poza ekranem przed i po
+      x.el.animate([{ transform: "translate(" + dx + "px," + dy + "px)" }, { transform: "none" }], { duration: Math.min(520, 260 + Math.hypot(dx, dy) * .35), easing: "cubic-bezier(.2,.8,.2,1)" });
+    });
+    var now = counters(view);
+    Object.keys(now).forEach(function (k) {
+      if (snap.counts[k] == null || snap.counts[k] === now[k]) return;
+      var host = view.querySelector('[data-grp="' + CSS.escape(k) + '"] .grp-n') || view.querySelector('.col[data-status="' + CSS.escape(k) + '"] .grp-n');
+      if (host) host.animate([{ transform: "scale(1.5)", background: "var(--brand)", color: "#fff" }, { transform: "none" }], { duration: 480, easing: "cubic-bezier(.3,1.6,.6,1)" });
+    });
+  };
 
   /* ---- motyw: ikona robi obrót ---- */
   addEventListener("themechange", function () {

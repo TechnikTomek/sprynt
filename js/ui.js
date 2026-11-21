@@ -208,7 +208,7 @@
   };
 
   /* ---- Okna dialogowe -------------------------------------------------- */
-  /** Prosty formularz w oknie. fields: [{name,label,type:'text'|'select'|'color',value,options:[[v,l]]}] */
+  /** Prosty formularz w oknie. fields: [{name,label,type:'text'|'textarea'|'select'|'color',value,options:[[v,l]]}] */
   SP.form = function (o) {
     return new Promise(function (resolve) {
       var bg = SP.el('<div class="dlg-bg"><form class="dlg" role="dialog" aria-modal="true"><h2></h2><div class="dlg-fields"></div><div class="dlg-acts"><button type="button" class="btn ghost" data-cancel>Anuluj</button><button type="submit" class="btn primary"></button></div></form></div>');
@@ -219,6 +219,7 @@
         var id = "f_" + f.name, ctl;
         if (f.type === "select") ctl = '<select class="input" id="' + id + '" name="' + f.name + '">' + f.options.map(function (op) { return '<option value="' + esc(op[0]) + '"' + (op[0] === f.value ? " selected" : "") + ">" + esc(op[1]) + "</option>"; }).join("") + "</select>";
         else if (f.type === "color") ctl = '<div class="swatches" id="' + id + '">' + f.options.map(function (c, i) { return '<label><input type="radio" name="' + f.name + '" value="' + c + '"' + ((f.value ? c === f.value : i === 0) ? " checked" : "") + '><span style="background:' + c + '"></span></label>'; }).join("") + "</div>";
+        else if (f.type === "textarea") ctl = '<textarea class="input" rows="7" id="' + id + '" name="' + f.name + '" placeholder="' + esc(f.placeholder || "") + '" ' + (f.required ? "required" : "") + ">" + esc(f.value || "") + "</textarea>";
         else ctl = '<input class="input" id="' + id + '" name="' + f.name + '" value="' + esc(f.value || "") + '" placeholder="' + esc(f.placeholder || "") + '" ' + (f.required ? "required" : "") + ' autocomplete="off" />';
         fields.appendChild(SP.el('<div class="dlg-field"><label for="' + id + '">' + esc(f.label) + "</label>" + ctl + "</div>"));
       });
@@ -233,7 +234,7 @@
         close(out);
       });
       document.body.appendChild(bg);
-      var first = bg.querySelector("input.input,select"); if (first) first.focus();
+      var first = bg.querySelector("input.input,select,textarea"); if (first) first.focus();
     });
   };
   SP.confirm = function (title, text, okLabel) {

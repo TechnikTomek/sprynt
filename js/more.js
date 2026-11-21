@@ -218,7 +218,7 @@
   /* =================== Menu „Więcej” w zadaniu =================== */
   SP.taskMoreMenu = function (anchor, taskId) {
     var t = db.task(taskId);
-    SP.menu(anchor, [
+    SP.menu(anchor, (t.parentId || !SP.splitTask ? [] : [{ label: "Rozbij na podzadania…", icon: "split", run: function () { SP.splitTask(taskId); } }]).concat([
       { label: "Zapisz jako szablon", icon: "files", run: function () {
         SP.form({ title: "Zapisz jako szablon", submit: "Zapisz", fields: [{ name: "n", label: "Nazwa szablonu", value: t.title, required: true }] }).then(function (v) {
           if (v && v.n) { db.saveTemplate(taskId, v.n); SP.toast("Zapisano szablon „" + v.n + "”"); }
@@ -227,7 +227,7 @@
       { label: "Ustaw przypomnienie", icon: "alarm-clock", run: function () { SP.pickReminder(anchor, taskId); } },
       { label: "Dodaj zależność (czeka na…)", icon: "lock", run: function () { addDep(anchor, taskId); } },
       { label: "Pola niestandardowe listy", icon: "spreadsheet", run: function () { SP.manageFields(t.listId); } },
-    ], { align: "right" });
+    ]), { align: "right" });
   };
 
   /* =================== Eksport CSV =================== */

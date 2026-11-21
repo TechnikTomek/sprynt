@@ -118,7 +118,7 @@
       var upcoming = open.filter(function (t) { return t.due && t.due >= today && D.diff(t.due) <= 7; }).sort(function (a, b) { return a.due < b.due ? -1 : 1; }).slice(0, 8);
 
       var opts = '<option value="all">Wszystkie przestrzenie</option>' + db.raw.spaces.map(function (s) { return '<option value="' + s.id + '"' + (s.id === scope ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
-      el.innerHTML = '<div class="page dash"><div class="page-h"><h1>Pulpit</h1><select class="input sm dash-scope" aria-label="Zakres">' + opts + "</select></div>" +
+      el.innerHTML = '<div class="page dash"><div class="page-h"><h1>Pulpit</h1>' + (SP.weekRecap ? '<button class="btn sm" data-recap>' + ico("trophy", 15) + "Podsumowanie tygodnia</button>" : "") + '<select class="input sm dash-scope" aria-label="Zakres">' + opts + "</select></div>" +
         '<div class="kpis">' + tiles.map(function (k) {
           return '<div class="kpi' + (k[4] ? " " + k[4] : "") + '"><span class="kpi-ico">' + ico(k[0], 18) + '</span><span class="kpi-l">' + k[1] + '</span><b class="kpi-v">' + k[2] + '</b><small class="muted">' + esc(k[3]) + "</small></div>";
         }).join("") + "</div>" +
@@ -135,6 +135,7 @@
         }).join("") || '<div class="empty-s">Brak terminów w najbliższym tygodniu.</div>') + "</div></section>" +
         "</div></div>";
       el.querySelector(".dash-scope").onchange = function (e) { views.dashboard.scope = e.target.value; SP.rerender(); };
+      var rb = el.querySelector("[data-recap]"); if (rb) rb.onclick = function () { SP.weekRecap(); };
       el.addEventListener("click", function (e) { var r = e.target.closest("[data-task]"); if (r) SP.openTask(r.dataset.task); });
       bindTips(el);
     },
