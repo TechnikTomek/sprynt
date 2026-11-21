@@ -36,6 +36,6 @@ window.SPRYNT_CLOUD = window.SPRYNT_CLOUD || {
 
 ## Dobrze wiedzieć
 - **E-maile:** darmowy Supabase wysyła tylko kilka e-maili na godzinę (potwierdzenia, reset hasła). Przy większej liczbie użytkowników podłącz własny serwer poczty: **Authentication → Emails → SMTP Settings** (np. Resend, Brevo).
-- **Potwierdzanie e-maila** możesz wyłączyć w **Authentication → Sign In / Providers → Email → Confirm email** – wtedy konto działa od razu po rejestracji.
+- **Potwierdzanie e-maila jest wyłączone w Sprynt** – konto działa od razu po rejestracji, bez e-maila weryfikacyjnego. W panelu Supabase musi być wyłączone **Authentication → Sign In / Providers → Email → Confirm email** (inaczej Supabase nadal wyśle e-mail i aplikacja pokaże ekran „sprawdź skrzynkę”).
 - **Darmowy plan** usypia projekt po tygodniu bez ruchu – wystarczy go obudzić w panelu Supabase.
 - Kopię danych pobierzesz w Sprynt: **Ustawienia → Kopia zapasowa**.

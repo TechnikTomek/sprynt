@@ -92,7 +92,12 @@
           // Gdy adres już istnieje (przy włączonym potwierdzaniu), Supabase zwraca użytkownika bez tożsamości.
           if (d.user && Array.isArray(d.user.identities) && !d.user.identities.length) throw err("Konto z tym adresem już istnieje. Zaloguj się albo zresetuj hasło.", "email");
           if (d.session) return SPAuth.current() || userOf(d.user);
-          return { pending: true, email: normEmail(o.email) };
+          // Bez weryfikacji e-maila: od razu logujemy. Gdy serwer nadal wymaga potwierdzenia
+          // (Supabase → Authentication → Email → „Confirm email” włączone), zostaje ekran „sprawdź skrzynkę”.
+          return need().auth.signInWithPassword({ email: normEmail(o.email), password: o.password }).then(function (r) {
+            if (!r.error && r.data && r.data.session) return SPAuth.current() || userOf(r.data.user);
+            return { pending: true, email: normEmail(o.email) };
+          });
         });
       },
       login: function (o) {
