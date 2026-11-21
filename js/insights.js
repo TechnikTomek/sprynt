@@ -59,6 +59,7 @@
       w.addEventListener("pointerleave", function () { tip.hidden = true; w.querySelectorAll(".ch-col.on").forEach(function (x) { x.classList.remove("on"); }); });
     });
   }
+  SP.charts = { colChart: colChart, hBars: hBars, bindTips: bindTips, hours: function (ms) { return hours(ms); } };
   function hours(ms) { var h = ms / 3600000; return (h >= 10 ? Math.round(h) : Math.round(h * 10) / 10).toLocaleString("pl-PL") + " h"; }
   function dayLabel(s) { var d = new Date(s + "T00:00:00"); return d.getDate() + "." + String(d.getMonth() + 1).padStart(2, "0"); }
   function weekday(s) { return new Date(s + "T00:00:00").toLocaleDateString("pl-PL", { weekday: "short" }).replace(".", ""); }

@@ -66,7 +66,7 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Kosz** `#/trash`: `db.raw.trash[]` = `{kind, label, at, payload}`; usuwanie zadań, list, folderów, przestrzeni, dokumentów i tablic odkłada kopię. `db.restore(id)` przywraca (sieroty trafiają do pierwszej listy/przestrzeni), `db.purge`, `db.emptyTrash`. Wpisy starsze niż 30 dni znikają przy wczytaniu.
 - **Czat** `#/chat/<spaceId>`: kanał na przestrzeń, `db.raw.chat[]`. Wzmianki `@Imię` (podpowiedzi), `SP-12` → link do zadania, reakcje, edycja/usuwanie, „Utwórz zadanie z wiadomości”. `SP.richText` formatuje też komentarze w zadaniach.
 - **Eksport CSV:** menu przestrzeni/folderu/listy → „Eksportuj zadania (CSV)” (`SP.exportCSV`): UTF-8 z BOM, separator `;` (Excel PL), razem z polami niestandardowymi.
-- **Skróty G:** K czat, B kosz.
+- **Skróty G:** K czat, B kosz, R sprinty, T arkusz czasu.
 
 ## Zadania z pliku (dodane 2026-11-20, `js/extract.js`)
 
@@ -109,6 +109,16 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Ikony dodane:** `split`, `trophy`, `wand-sparkles`, `rocket` (thesvg, glass).
 - **Testy:** `app.html` ma podłączone Supabase – testy rób na kopii z `window.SPRYNT_CLOUD = null` po `config.js` (inaczej rejestracja trafi do prawdziwej chmury). Kopię usuń po teście.
 
+## Sprinty i arkusz czasu (`js/sprints.js`, dodane 2026-11-21)
+
+- **Sprinty** `#/sprints` (lista: trwające, zaplanowane, zakończone, wykres prędkości z `sp.result.pointsDone`, backlog przestrzeni) i `#/sprint/<id>` (KPI, wykres spalania, tablica statusów z przeciąganiem, „Nowe zadanie w sprincie”, „Dodaj zadania” z backlogu). `db.raw.sprints[]` = `{id, spaceId, name, start, end, goal, state: planned|active|done, startedAt, closedAt, result}`; zadanie: `t.sprintId`, `t.points` (liczba albo null).
+  - API: `db.createSprint/updateSprint/deleteSprint` (zadania wracają do backlogu), `db.sprintTasks`, `db.sprintStats` (`tasks, done, points, pointsDone`), `db.startSprint` (jeden aktywny na przestrzeń), `db.completeSprint(id, moveTo|null)` (zapisuje `result` + `carried`, nieukończone → kolejny sprint albo backlog), `db.setSprint(ids, sprintId|null)`, `db.setPoints`, `db.nextSprintName`.
+  - Backlog = otwarte zadania bez sprintu albo w zakończonym sprincie. Wykres spalania liczony z `t.doneAt` (bez migawek); bez punktów liczy zadania.
+  - Wybieraki `SP.pickPoints` (Fibonacci) i `SP.pickSprint`. W oknie zadania pola „Punkty” i „Sprint” (`sprints.js` owija `SP.taskProps`/`SP.bindTaskExtras`). Chipy punktów i sprintu w wierszach i kartach, akcje zbiorcze „Sprint”/„Punkty”, menu Nowe → Sprint, menu przestrzeni → „Sprinty przestrzeni”.
+- **Arkusz czasu** `#/timesheet`: tydzień (pn–nd) wpisów `t.time[]` według dnia rozpoczęcia, grupowanie: zadania / osoby (`e.by`) / przestrzenie, sumy dzienne, eksport CSV (`;`, UTF-8 z BOM). Kliknięcie komórki → `db.addTimeOn(taskId, ms, "RRRR-MM-DD")` (wpis kończy się o 17:00 tego dnia, dziś – teraz).
+- Wykresy z `insights.js` są dostępne jako `SP.charts` (`colChart`, `hBars`, `bindTips`, `hours`).
+- **Skróty G:** R sprinty, T arkusz czasu. **Ikony:** `gauge` (sprinty), `countdown` (arkusz czasu).
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.
@@ -141,7 +151,7 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 
 ## Routing
 
-- **Strony:** `#/home`, `#/inbox`, `#/my-tasks`, `#/docs`, `#/doc/<id>`, `#/cloud`, `#/settings`, `#/dashboard`, `#/goals`, `#/automations`, `#/whiteboards`, `#/wb/<id>`, `#/chat[/<spaceId>]`, `#/templates`, `#/trash`, `#/team`.
+- **Strony:** `#/home`, `#/inbox`, `#/my-tasks`, `#/docs`, `#/doc/<id>`, `#/cloud`, `#/settings`, `#/dashboard`, `#/goals`, `#/automations`, `#/whiteboards`, `#/wb/<id>`, `#/chat[/<spaceId>]`, `#/templates`, `#/trash`, `#/team`, `#/sprints`, `#/sprint/<id>`, `#/timesheet`.
 - **Miejsca:** `#/space/<id>[/list|board|calendar]`, `#/folder/<id>[/…]`, `#/list/<id>[/…]`.
 
 ## Model danych

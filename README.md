@@ -1,8 +1,12 @@
 # Sprynt
 
-Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabela, kalendarz, oś czasu, pulpit z wykresami, tablice online (whiteboard), cele, automatyzacje, czat, pola niestandardowe, szablony, przypomnienia, śledzenie czasu, dokumenty i chmura na pliki.
+Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabela, kalendarz, oś czasu, pulpit z wykresami, tablice online (whiteboard), sprinty z wykresem spalania, arkusz czasu, cele, automatyzacje, czat, pola niestandardowe, szablony, przypomnienia, śledzenie czasu, dokumenty i chmura na pliki.
 
 **AI (Claude):** po dodaniu własnego klucza API Anthropic w Ustawieniach zadania z dokumentów wyciąga model Claude – naprawdę czyta treść (także PDF-y, skany i zdjęcia notatek), sprawdza dokument i wskazuje problemy. Klucz zostaje w Twojej przeglądarce.
+
+**Sprinty:** planuj pracę w 1–2-tygodniowych sprintach – oceniaj zadania w punktach, przenoś je z backlogu, śledź wykres spalania i prędkość zespołu. Na koniec sprintu nieukończone zadania same przechodzą dalej.
+
+**Arkusz czasu:** cały tydzień godzin pracy w jednej tabeli – po zadaniach, osobach albo przestrzeniach. Dopisz czas kliknięciem w dzień i wyeksportuj do CSV.
 
 **Szybkie dodawanie:** wpisz „Wysłać ofertę jutro @Anna !pilne #klient” – Sprynt sam rozpozna termin, osobę, priorytet i tagi. Wklej kilka linii, a każda stanie się zadaniem; duże zadanie rozbijesz na podzadania jednym kliknięciem.
 
@@ -30,5 +34,5 @@ Sprynt można też zainstalować jako aplikację (PWA) na komputerze i telefonie
 
 - `index.html`, `css/landing.css`, `js/landing.js` – strona startowa
 - `app.html` – aplikacja (logowanie + wszystkie widoki), `css/app.css`, `css/auth.css`
-- `js/` – logika: `data.js` (dane), `ui.js`, `task.js`, `views.js`, `insights.js`, `whiteboard.js`, `more.js`, `ai.js`, `extract.js`, `magic.js`, `recap.js`, `onboard.js`, `invite.js`, `anim.js`, `app.js`
+- `js/` – logika: `data.js` (dane), `ui.js`, `task.js`, `views.js`, `insights.js`, `whiteboard.js`, `more.js`, `ai.js`, `extract.js`, `magic.js`, `recap.js`, `onboard.js`, `sprints.js`, `invite.js`, `anim.js`, `app.js`
 - `promo/` – film promocyjny i jego źródło (`promo.html`)

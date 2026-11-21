@@ -36,7 +36,7 @@
       folders: [],
       lists: [{ id: "li-1", spaceId: "sp-1", folderId: null, name: "Zadania" }],
       tasks: [], tags: [], notifications: [], docs: [], favorites: [], recents: [], files: [],
-      goals: [], automations: [], whiteboards: [], fields: [], trash: [], chat: [], templates: [],
+      goals: [], automations: [], whiteboards: [], fields: [], trash: [], chat: [], templates: [], sprints: [],
       ui: { expanded: { "sp-1": true }, views: {} },
     };
   }
@@ -56,7 +56,7 @@
   }
   data = load();
   // Konta założone przed dodaniem nowych funkcji.
-  ["files", "goals", "automations", "whiteboards", "fields", "trash", "chat", "templates"].forEach(function (k) { if (!Array.isArray(data[k])) data[k] = []; });
+  ["files", "goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "sprints"].forEach(function (k) { if (!Array.isArray(data[k])) data[k] = []; });
   save();
 
   function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
@@ -269,6 +269,16 @@
       t.activity.push({ by: "me", text: "dodał(a) ręcznie czas: " + SP.db.fmtDuration(ms), at: end.toISOString() });
       changed("time");
     },
+    /** Czas wpisany ręcznie na konkretny dzień (arkusz czasu): wpis kończy się o 17:00 tego dnia (albo teraz, gdy to dziś). */
+    addTimeOn: function (taskId, ms, day) {
+      var t = SP.db.task(taskId); if (!t || ms <= 0) return;
+      var end = day === ymd(new Date()) ? new Date() : new Date(day + "T17:00:00"), start = new Date(end - ms);
+      if (ymd(start) !== day) { start = new Date(day + "T00:00:00"); end = new Date(start.getTime() + ms); }
+      t.time = t.time || [];
+      t.time.push({ id: uid("e"), start: start.toISOString(), end: end.toISOString(), by: "me", manual: true });
+      t.activity.push({ by: "me", text: "dodał(a) czas w arkuszu: " + SP.db.fmtDuration(ms) + " (" + day + ")", at: new Date().toISOString() });
+      changed("time");
+    },
     removeTime: function (taskId, entryId) {
       var t = SP.db.task(taskId); if (!t) return;
       t.time = (t.time || []).filter(function (e) { return e.id !== entryId; });
@@ -299,7 +309,7 @@
       if (!w || !Array.isArray(w.spaces) || !Array.isArray(w.lists) || !Array.isArray(w.tasks) || !Array.isArray(w.people)) throw new Error("To nie jest plik kopii Sprynt.");
       w.version = VERSION;
       w.files = []; // zawartość plików z chmury nie jest częścią kopii
-      ["goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "tags", "notifications", "docs", "favorites", "recents", "folders"].forEach(function (k) { if (!Array.isArray(w[k])) w[k] = []; });
+      ["goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "sprints", "tags", "notifications", "docs", "favorites", "recents", "folders"].forEach(function (k) { if (!Array.isArray(w[k])) w[k] = []; });
       w.ui = w.ui || { expanded: {}, views: {} };
       w.people[0] = Object.assign({}, w.people[0], { id: "me", name: user.name, email: user.email });
       data = w; changed("all");
@@ -313,7 +323,7 @@
     replaceData: function (d) {
       if (!d || !Array.isArray(d.spaces)) return;
       d.version = VERSION;
-      ["files", "goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "tags", "notifications", "docs", "favorites", "recents", "folders", "lists", "tasks", "people"].forEach(function (k) { if (!Array.isArray(d[k])) d[k] = []; });
+      ["files", "goals", "automations", "whiteboards", "fields", "trash", "chat", "templates", "sprints", "tags", "notifications", "docs", "favorites", "recents", "folders", "lists", "tasks", "people"].forEach(function (k) { if (!Array.isArray(d[k])) d[k] = []; });
       d.ui = d.ui || { expanded: {}, views: {} };
       if (!d.people.some(function (p) { return p.id === "me"; })) d.people.unshift({ id: "me", name: user.name, email: user.email, color: "#6c5ce7" });
       data = d;
@@ -350,7 +360,7 @@
     shareSnapshot: function (spaceIds) {
       var set = new Set(spaceIds), lists = data.lists.filter(function (l) { return set.has(l.spaceId); }), lset = new Set(lists.map(function (l) { return l.id; }));
       var tasks = data.tasks.filter(function (t) { return lset.has(t.listId); }).map(function (t) {
-        return { id: t.id, parentId: t.parentId, listId: t.listId, title: t.title, status: t.status, priority: t.priority, assignees: t.assignees, due: t.due, start: t.start, tags: t.tags, desc: t.desc, checklist: t.checklist, cf: t.cf, recur: t.recur };
+        return { id: t.id, parentId: t.parentId, listId: t.listId, title: t.title, status: t.status, priority: t.priority, assignees: t.assignees, due: t.due, start: t.start, tags: t.tags, desc: t.desc, checklist: t.checklist, cf: t.cf, recur: t.recur, points: t.points };
       });
       return {
         spaces: data.spaces.filter(function (s) { return set.has(s.id); }).map(function (s) { return { id: s.id, name: s.name, color: s.color }; }),
@@ -403,7 +413,7 @@
         var cf = {}; Object.keys(t.cf || {}).forEach(function (k) { if (idMap[k]) cf[idMap[k]] = t.cf[k]; });
         data.tasks.push({ id: nid(t.id, "t"), num: ++num, parentId: t.parentId ? idMap[t.parentId] || null : null, listId: idMap[t.listId], title: t.title, status: t.status || "todo", priority: t.priority || null,
           assignees: (t.assignees || []).map(function (a) { return idMap[a]; }).filter(Boolean), due: t.due || null, start: t.start || null, tags: t.tags || [], desc: t.desc || "",
-          checklist: t.checklist || [], comments: [], time: [], recur: t.recur || null, cf: cf, deps: [], remind: null, createdAt: now, updatedAt: now,
+          checklist: t.checklist || [], comments: [], time: [], recur: t.recur || null, cf: cf, deps: [], remind: null, points: t.points != null ? t.points : null, createdAt: now, updatedAt: now,
           activity: [{ by: "me", text: "dołączył(a) z zaproszenia od " + (from.name || from.email || "znajomego"), at: now }] });
         summary.tasks++;
       });
@@ -451,7 +461,7 @@
       data.tasks = data.tasks.filter(function (t) { return !set.has(t.listId); });
       data.lists = data.lists.filter(function (l) { return !set.has(l.id); });
       if (kind === "folder") data.folders = data.folders.filter(function (f) { return f.id !== id; });
-      if (kind === "space") { data.folders = data.folders.filter(function (f) { return f.spaceId !== id; }); data.spaces = data.spaces.filter(function (s) { return s.id !== id; }); data.docs = data.docs.filter(function (d) { return d.spaceId !== id; }); data.whiteboards = data.whiteboards.filter(function (w) { return w.spaceId !== id; }); data.automations = data.automations.filter(function (a) { return a.spaceId !== id; }); }
+      if (kind === "space") { data.folders = data.folders.filter(function (f) { return f.spaceId !== id; }); data.spaces = data.spaces.filter(function (s) { return s.id !== id; }); data.docs = data.docs.filter(function (d) { return d.spaceId !== id; }); data.whiteboards = data.whiteboards.filter(function (w) { return w.spaceId !== id; }); data.automations = data.automations.filter(function (a) { return a.spaceId !== id; }); data.sprints = data.sprints.filter(function (x) { return x.spaceId !== id; }); }
       data.favorites = data.favorites.filter(function (f) { return f.id !== id && !set.has(f.id); });
       changed("tree");
     },
@@ -657,6 +667,59 @@
     goalProgress: function (g) {
       if (!g.targets.length) return 0;
       return g.targets.reduce(function (s, tg) { return s + SP.db.targetProgress(tg).p; }, 0) / g.targets.length;
+    },
+
+    /* ---- Sprinty: db.raw.sprints[] = {spaceId, name, start, end, goal, state: planned|active|done}; zadanie: t.sprintId, t.points ---- */
+    sprint: function (id) { return byId(data.sprints, id); },
+    createSprint: function (sp) {
+      sp = Object.assign({ id: uid("s"), state: "planned", goal: "", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, sp);
+      data.sprints.push(sp); changed("sprints"); return sp;
+    },
+    updateSprint: function (id, patch) { var sp = byId(data.sprints, id); if (sp) { Object.assign(sp, patch, { updatedAt: new Date().toISOString() }); changed("sprints"); } return sp; },
+    deleteSprint: function (id) {
+      data.sprints = data.sprints.filter(function (x) { return x.id !== id; });
+      data.tasks.forEach(function (t) { if (t.sprintId === id) t.sprintId = null; });
+      changed("sprints");
+    },
+    sprintTasks: function (id) { return data.tasks.filter(function (t) { return t.sprintId === id && !t.parentId; }); },
+    /** Następny numer sprintu w przestrzeni („Sprint 4”). */
+    nextSprintName: function (spaceId) {
+      var n = data.sprints.filter(function (x) { return x.spaceId === spaceId; }).reduce(function (m, x) { var k = parseInt((String(x.name).match(/(\d+)\s*$/) || [])[1], 10); return Math.max(m, k || 0); }, 0);
+      return "Sprint " + (n + 1);
+    },
+    setPoints: function (taskId, pts) {
+      var t = SP.db.task(taskId); if (!t) return;
+      pts = pts === null || pts === "" || pts === undefined ? null : Math.max(0, Number(pts) || 0);
+      SP.db.updateTask(taskId, { points: pts }, pts == null ? "usunął/usunęła punkty" : "ustawił(a) punkty: " + pts);
+    },
+    setSprint: function (taskIds, sprintId) {
+      var sp = sprintId ? byId(data.sprints, sprintId) : null;
+      SP.db.bulkUpdate(taskIds, { sprintId: sprintId || null }, sp ? "dodał(a) do „" + sp.name + "”" : "przeniósł/przeniosła do backlogu");
+    },
+    /** Postęp sprintu: zadania i punkty (zadanie bez punktów liczy się jako 0 pkt). */
+    sprintStats: function (id) {
+      var ts = SP.db.sprintTasks(id), done = ts.filter(function (t) { return SP.db.status(t.status).closed; });
+      var pts = function (a) { return a.reduce(function (s, t) { return s + (Number(t.points) || 0); }, 0); };
+      return { tasks: ts.length, done: done.length, points: pts(ts), pointsDone: pts(done) };
+    },
+    startSprint: function (id) {
+      var sp = byId(data.sprints, id); if (!sp) return;
+      data.sprints.forEach(function (x) { if (x.spaceId === sp.spaceId && x.state === "active" && x.id !== id) x.state = "planned"; });
+      sp.state = "active"; sp.startedAt = new Date().toISOString(); sp.updatedAt = sp.startedAt;
+      changed("sprints");
+    },
+    /** Zamyka sprint: zapisuje wynik, nieukończone zadania przenosi do moveTo (id sprintu) albo do backlogu (null). */
+    completeSprint: function (id, moveTo) {
+      var sp = byId(data.sprints, id); if (!sp) return null;
+      var st = SP.db.sprintTasks(id), open = st.filter(function (t) { return !SP.db.status(t.status).closed; });
+      sp.result = SP.db.sprintStats(id); sp.result.carried = open.length;
+      sp.state = "done"; sp.closedAt = new Date().toISOString(); sp.updatedAt = sp.closedAt;
+      var to = moveTo ? byId(data.sprints, moveTo) : null;
+      open.forEach(function (t) {
+        t.sprintId = to ? to.id : null; t.updatedAt = sp.closedAt;
+        t.activity.push({ by: "me", text: "przeszło z „" + sp.name + "” " + (to ? "do „" + to.name + "”" : "do backlogu"), at: sp.closedAt });
+      });
+      changed("sprints"); return sp;
     },
 
     /* ---- Tablice online (whiteboard) ---- */

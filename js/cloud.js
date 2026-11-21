@@ -25,7 +25,7 @@
   if (pill) pill.addEventListener("click", function () { if (state === "error" || state === "offline" || state === "pending") syncNow(); else SP.toast(pill.title); });
 
   /* ---- łączenie dwóch wersji (urządzenia pracowały równolegle) ---- */
-  var ARR = ["spaces", "folders", "lists", "tasks", "docs", "goals", "automations", "whiteboards", "fields", "templates", "chat", "files", "people", "notifications", "trash", "tags"];
+  var ARR = ["spaces", "folders", "lists", "tasks", "docs", "goals", "automations", "whiteboards", "fields", "templates", "chat", "files", "people", "notifications", "trash", "tags", "sprints"];
   function stamp(o) { return Date.parse(o && (o.updatedAt || o.at || o.createdAt || o.uploadedAt) || 0) || 0; }
   function merge(local, server) {
     var out = JSON.parse(JSON.stringify(server));

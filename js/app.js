@@ -17,7 +17,7 @@
     var parts = location.hash.replace(/^#\/?/, "").split("/").map(decodeURIComponent);
     var name = parts[0] || "home";
     if (["space", "folder", "list"].indexOf(name) >= 0) return { name: name, params: { id: parts[1], view: ["list", "board", "table", "calendar", "timeline"].indexOf(parts[2]) >= 0 ? parts[2] : null } };
-    if (name === "doc" || name === "wb" || name === "chat") return { name: name, params: { id: parts[1] } };
+    if (name === "doc" || name === "wb" || name === "chat" || name === "sprint") return { name: name, params: { id: parts[1] } };
     if (!SP.views[name]) return { name: "home", params: {} };
     return { name: name, params: {} };
   }
@@ -65,7 +65,7 @@
   function isActive(type, id) { return route.name === type && route.params.id === id; }
   function renderSidebar() {
     document.querySelectorAll(".side-item[data-route]").forEach(function (a) {
-      a.setAttribute("aria-current", a.dataset.route === route.name || (a.dataset.route === "docs" && route.name === "doc") || (a.dataset.route === "whiteboards" && route.name === "wb") || (a.dataset.route === "trash" && route.name === "trash") ? "page" : "false");
+      a.setAttribute("aria-current", a.dataset.route === route.name || (a.dataset.route === "docs" && route.name === "doc") || (a.dataset.route === "whiteboards" && route.name === "wb") || (a.dataset.route === "sprints" && route.name === "sprint") || (a.dataset.route === "trash" && route.name === "trash") ? "page" : "false");
     });
     var unread = db.raw.notifications.filter(function (n) { return n.state === "important"; }).length;
     var ic = $("#inboxCount"); ic.hidden = !unread; ic.textContent = unread;
@@ -165,6 +165,7 @@
     if (type === "list") items.push({ label: "Pola niestandardowe…", icon: "spreadsheet", run: function () { SP.manageFields(id); } });
     items.push({ label: "Eksportuj zadania (CSV)", icon: "download", run: function () { SP.exportCSV(type, id); } });
     items.push({ label: "Eksportuj do kalendarza (.ics)", icon: "calendar", run: function () { SP.exportICS(type, id); } });
+    if (type === "space") items.push({ label: "Sprinty przestrzeni", icon: "gauge", run: function () { SP.views.sprints.scope = id; location.hash = "#/sprints"; } });
     if (type === "space") items.push({ label: "Czat przestrzeni", icon: "message-square", run: function () { location.hash = "#/chat/" + id; } });
     items.push("-", { label: "Usuń " + label, icon: "trash", danger: true, run: function () {
       SP.confirm("Usunąć " + label + " „" + o.name + "”?", "Razem z zadaniami trafi do kosza – możesz to przywrócić przez 30 dni.").then(function (ok) {
@@ -257,6 +258,7 @@
       { label: "Przestrzeń", icon: "layout-dashboard", run: newSpace },
       { label: "Dokument", icon: "file-text", run: function () { SP.newDoc(); } },
       { label: "Tablica online", icon: "presentation", run: function () { SP.newWhiteboard(); } },
+      { label: "Sprint", icon: "gauge", run: function () { SP.newSprint(cur ? (db.list(cur) || {}).spaceId : null); } },
       { label: "Zadania z pliku (Word, PDF, Excel)…", icon: "sparkles", run: function () { SP.extractTasks({ listId: cur || undefined }); } },
       { label: "Wiele zadań z listy (wklej)…", icon: "wand-sparkles", run: function () { pasteFromClipboard(cur); } },
       { label: "Zadanie z szablonu", icon: "files", run: function () { if (!db.raw.templates.length) { location.hash = "#/templates"; return; } SP.quickTask({ listId: cur || undefined, tpl: db.raw.templates[0].id }); } },
@@ -355,6 +357,8 @@
     if (boards.length) groups.push(["Tablice online", boards.map(function (w) { return { html: ico("presentation", 15) + "<span>" + esc(w.title) + "</span>", run: function () { location.hash = "#/wb/" + w.id; } }; })]);
     var goals = db.raw.goals.filter(function (g) { return q && m(g.name); }).slice(0, 4);
     if (goals.length) groups.push(["Cele", goals.map(function (g) { return { html: ico("target", 15) + "<span>" + esc(g.name) + '</span><small class="muted">' + Math.round(db.goalProgress(g) * 100) + "%</small>", run: function () { location.hash = "#/goals"; } }; })]);
+    var sprs = db.raw.sprints.filter(function (x) { return q && m(x.name); }).slice(0, 4);
+    if (sprs.length) groups.push(["Sprinty", sprs.map(function (x) { return { html: ico("gauge", 15) + "<span>" + esc(x.name) + '</span><small class="muted">' + esc((db.space(x.spaceId) || {}).name || "") + "</small>", run: function () { location.hash = "#/sprint/" + x.id; } }; })]);
     var acts = [
       ["Nowe zadanie", "plus", function () { SP.quickTask(); }], ["Nowa lista", "list", function () { newList(); }], ["Nowy dokument", "file-text", function () { SP.newDoc(); }],
       ["Wgraj pliki do chmury", "upload", function () { SP.pickFiles(); }], ["Chmura", "cloud", function () { location.hash = "#/cloud"; }],
@@ -363,6 +367,8 @@
       ["Pulpit", "chart-column", function () { location.hash = "#/dashboard"; }], ["Cele", "target", function () { location.hash = "#/goals"; }],
       ["Automatyzacje", "zap", function () { location.hash = "#/automations"; }], ["Tablice online", "presentation", function () { location.hash = "#/whiteboards"; }],
       ["Nowa tablica online", "presentation", function () { SP.newWhiteboard(); }],
+      ["Sprinty", "gauge", function () { location.hash = "#/sprints"; }], ["Nowy sprint", "gauge", function () { SP.newSprint(); }],
+      ["Arkusz czasu", "countdown", function () { location.hash = "#/timesheet"; }],
       ["Czat", "message-square", function () { location.hash = "#/chat"; }], ["Szablony zadań", "files", function () { location.hash = "#/templates"; }],
       ["Kosz", "trash", function () { location.hash = "#/trash"; }],
       ["Zaproś znajomych", "users", function () { SP.inviteDialog(); }], ["Zespół", "users", function () { location.hash = "#/team"; }],
@@ -408,7 +414,7 @@
     // Sekwencje „G, potem litera” – przejście do widoku.
     if (gPending) {
       gPending = false;
-      var go = { h: "#/home", i: "#/inbox", m: "#/my-tasks", c: "#/cloud", s: "#/settings", d: "#/docs", p: "#/dashboard", o: "#/goals", a: "#/automations", w: "#/whiteboards", k: "#/chat", b: "#/trash" }[e.key.toLowerCase()];
+      var go = { h: "#/home", i: "#/inbox", m: "#/my-tasks", c: "#/cloud", s: "#/settings", d: "#/docs", p: "#/dashboard", o: "#/goals", a: "#/automations", w: "#/whiteboards", k: "#/chat", b: "#/trash", r: "#/sprints", t: "#/timesheet" }[e.key.toLowerCase()];
       if (go) { e.preventDefault(); location.hash = go; return; }
     }
     if (e.key === "g") { gPending = true; setTimeout(function () { gPending = false; }, 1200); return; }

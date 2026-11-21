@@ -80,3 +80,5 @@ Pobrane, ale na razie nieużywane: `circle-plus`, `funnel`, `settings`, `zap`, `
 | `hash` / `coins` / `link` | Typy pól: liczba, kwota, link; `hash` też jako kanał czatu | Interface / Commerce |
 | `at-sign` | Wzmianka w czacie | Communication |
 | `alarm-clock` | Przypomnienia | Time |
+| `gauge` | Sprinty (pasek boczny, okruszki, pole „Sprint” w zadaniu) | Data |
+| `countdown` | Arkusz czasu | Time |

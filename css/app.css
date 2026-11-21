@@ -1590,3 +1590,83 @@ form:has(.sm-chips.inline:not([hidden])) > .sm-help { display: none; }
   .ob-roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ob-teams { grid-template-columns: 1fr; }
   .ob-step h1 { font-size: 21px; } .rc-big { font-size: 88px; }
 }
+
+/* =================== Sprinty i arkusz czasu (js/sprints.js) =================== */
+.pts { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--brand-soft); color: var(--brand); font-size: 11.5px; font-weight: 700; font-variant-numeric: tabular-nums; flex: none; }
+.pts.empty { background: var(--hover); color: var(--text-3); }
+.pm-item .pts { margin-right: 2px; }
+.ct-key { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.spr-chip { color: var(--brand); max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.spr-chip:hover { text-decoration: underline; }
+.chip-btn.sm { height: 26px; padding: 0 8px; font-size: 12px; flex: none; }
+.spr-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.spr-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.spr-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 150px; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; color: inherit; }
+.spr-row:hover { background: var(--hover); }
+.spr-row.active { background: var(--brand-soft); }
+.spr-ico { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--hover-2); color: var(--text-2); }
+.spr-row.active .spr-ico { background: var(--brand); color: #fff; }
+.spr-main { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.spr-main b { font-weight: 650; }
+.spr-main small { flex-basis: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spr-goal { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 12.5px; }
+.spr-goal.big { margin: -8px 0 16px; font-size: 14px; }
+.spr-prog { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.spr-bar { display: block; width: 100%; height: 6px; border-radius: 3px; background: var(--hover-2); overflow: hidden; }
+.spr-bar i { display: block; height: 100%; border-radius: 3px; background: var(--ok); transition: width .5s cubic-bezier(.2, .8, .2, 1); }
+.spr-h { flex-wrap: wrap; }
+.spr-h .btn, .spr-h .muted { margin-left: 0; }
+.spr-bd { margin-bottom: 16px; }
+.spr-board { min-height: 0; }
+.spr-board .col-h .grp-n { margin-left: auto; }
+.bd-ideal { stroke: var(--line-3); stroke-width: 2; stroke-dasharray: 5 5; }
+.bd-line { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.bd-dot { fill: var(--panel); stroke: var(--brand); stroke-width: 2; }
+.ch-col.on .bd-dot { fill: var(--brand); }
+.bd-today { stroke: var(--today); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.bd-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-size: 12.5px; color: var(--text-2); }
+.bd-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.bd-k { width: 18px; height: 0; border-top: 2.5px solid var(--brand); }
+.bd-k.ideal { border-top: 2px dashed var(--line-3); }
+.spr-add { width: min(620px, 100%); }
+.spr-add .input { margin: 4px 0 10px; }
+.spr-add-list { max-height: 50vh; overflow: auto; margin: 0 -8px; }
+.spr-add-i { display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 4px 8px; border-radius: 8px; cursor: pointer; }
+.spr-add-i:hover { background: var(--hover); }
+.spr-add-i > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spr-add-i input { accent-color: var(--brand); width: 16px; height: 16px; }
+.spr-add-sum { margin-right: auto; font-size: 13px; }
+
+.ts .page-h { flex-wrap: wrap; }
+.ts .page-h .btn { margin-left: 0; }
+.ts-nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.ts-nav b { min-width: 150px; text-align: center; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.ts-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ts-card { overflow: hidden; }
+.ts-scroll { overflow-x: auto; }
+.ts-tbl { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ts-tbl th, .ts-tbl td { padding: 4px 6px; border-bottom: 1px solid var(--line-2); text-align: center; white-space: nowrap; }
+.ts-tbl th { padding: 10px 6px 8px; color: var(--text-2); font-weight: 650; font-size: 12.5px; text-transform: capitalize; }
+.ts-tbl th small { display: block; color: var(--text-3); font-weight: 500; }
+.ts-tbl th.today, .ts-tbl td.today { background: color-mix(in srgb, var(--brand) 6%, transparent); }
+.ts-tbl th.today { color: var(--brand); }
+.ts-tbl .we { color: var(--text-3); }
+.ts-tbl .ts-name { text-align: left; width: 38%; max-width: 0; padding-left: 14px; }
+.ts-tbl .ts-sum { width: 80px; padding-right: 14px; text-align: right; }
+.ts-tbl tfoot td { border-bottom: 0; padding-top: 8px; padding-bottom: 8px; }
+.ts-tbl tbody tr:hover { background: var(--panel-2); }
+.ts-open, .ts-name > span { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; text-align: left; padding: 4px 0; }
+.ts-open .ts-t, .ts-name > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ts-open:hover .ts-t { color: var(--brand); }
+.ts-open small { flex: none; }
+.ts-live { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex: none; animation: blinkDot 1.2s infinite; }
+.ts-cell { display: inline-grid; place-items: center; min-width: 52px; height: 30px; padding: 0 6px; border-radius: 7px; color: var(--text-3); }
+.ts-cell.has { color: var(--text); font-weight: 600; }
+button.ts-cell:hover { background: var(--hover); box-shadow: 0 0 0 1px var(--line); color: var(--text); }
+button.ts-cell span { opacity: 0; font-size: 16px; }
+tr:hover button.ts-cell span, button.ts-cell:focus-visible span { opacity: 1; }
+.ts-hint { margin-top: 10px; font-size: 12.5px; }
+@media (max-width: 1100px) { .spr-grid { grid-template-columns: 1fr; } .ts-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .spr-row { grid-template-columns: auto minmax(0, 1fr); } .spr-prog { grid-column: 1 / -1; } .ts-kpis { grid-template-columns: 1fr; } .ts-nav { margin-left: 0; } }
+.sprints .page-h { flex-wrap: wrap; }
+@media (max-width: 640px) { .sprints .page-h .dash-scope { order: 3; flex-basis: 100%; max-width: none; } }

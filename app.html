@@ -52,6 +52,8 @@
           <a class="side-item" href="#/chat" data-route="chat"><span data-icon="message-square" data-size="18"></span><span>Czat</span></a>
           <a class="side-item" href="#/team" data-route="team"><span data-icon="users" data-size="18"></span><span>Zespół</span></a>
           <a class="side-item" href="#/my-tasks" data-route="my-tasks"><span data-icon="list-checks" data-size="18"></span><span>Moje zadania</span></a>
+          <a class="side-item" href="#/sprints" data-route="sprints"><span data-icon="gauge" data-size="18"></span><span>Sprinty</span></a>
+          <a class="side-item" href="#/timesheet" data-route="timesheet"><span data-icon="countdown" data-size="18"></span><span>Arkusz czasu</span></a>
           <a class="side-item" href="#/dashboard" data-route="dashboard"><span data-icon="chart-column" data-size="18"></span><span>Pulpit</span></a>
           <a class="side-item" href="#/docs" data-route="docs"><span data-icon="file-text" data-size="18"></span><span>Dokumenty</span></a>
           <a class="side-item" href="#/whiteboards" data-route="whiteboards"><span data-icon="presentation" data-size="18"></span><span>Tablice online</span></a>
@@ -187,7 +189,7 @@
 
   <script>
     (function () {
-      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "ai", "extract", "magic", "recap", "onboard", "invite", "cloud", "anim", "app"] : ["icons", "login"];
+      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "ai", "extract", "magic", "recap", "onboard", "invite", "cloud", "anim", "sprints", "app"] : ["icons", "login"];
       if (!SP_SIGNED_IN) {
         var app = document.querySelector(".app"); if (app) app.remove();
         document.querySelectorAll(".pal-bg, .toast").forEach(function (e) { e.remove(); });

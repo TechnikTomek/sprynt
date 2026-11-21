@@ -15,6 +15,9 @@
     if (t.comments.length) h += '<span class="r-chip" title="Komentarze">' + ico("message-square", 13) + t.comments.length + "</span>";
     var tt = db.timeTotal(t);
     if (tt >= 60000 || (t.time || []).some(function (e) { return !e.end; })) h += '<span class="r-chip" title="Zarejestrowany czas">' + ico("clock", 13) + '<span data-live-total="' + t.id + '">' + db.fmtDuration(tt) + "</span></span>";
+    if (t.points != null) h += '<span class="pts" title="Punkty">' + t.points + "</span>";
+    var spr = t.sprintId && db.sprint && db.sprint(t.sprintId);
+    if (spr && spr.state !== "done") h += '<a class="r-chip spr-chip" data-q="go" href="#/sprint/' + spr.id + '" title="Sprint">' + ico("gauge", 13) + esc(spr.name) + "</a>";
     if (t.recur) h += '<span class="r-chip" title="Powtarza się ' + db.RECUR[t.recur] + '">' + ico("repeat", 13) + "</span>";
     var att = db.filesFor(t.id).length;
     if (att) h += '<span class="r-chip" title="Załączniki">' + ico("paperclip", 13) + att + "</span>";
@@ -66,13 +69,19 @@
         else if (k === "assignees") SP.pickAssignees(b, first.assignees || [], function (v) { db.bulkUpdate(ids, { assignees: v }); });
         else if (k === "due") SP.pickDate(b, null, function (v) { db.bulkUpdate(ids, { due: v }, v ? "ustawił(a) termin" : "usunął/usunęła termin"); });
         else if (k === "list") SP.pickList(b, null, function (v) { db.bulkUpdate(ids, { listId: v }, "przeniósł/przeniosła do listy " + db.list(v).name); SP.toast("Przeniesiono " + ids.length + " zadań"); });
+        else if (k === "sprint") {
+          var sids = new Set(ids.map(function (id) { var x = db.task(id); return x && (db.list(x.listId) || {}).spaceId; }));
+          if (sids.size > 1) { SP.toast("Zaznacz zadania z jednej przestrzeni"); return; }
+          SP.pickSprint(b, Array.from(sids)[0], null, function (v) { db.setSprint(ids, v); SP.toast(v ? "Dodano " + ids.length + " zadań do " + db.sprint(v).name : "Przeniesiono do backlogu"); });
+        }
+        else if (k === "points") SP.pickPoints(b, null, function (v) { ids.forEach(function (id) { db.setPoints(id, v); }); });
         else if (k === "dup") { ids.forEach(function (id) { db.duplicateTask(id); }); SP.toast("Zduplikowano " + ids.length + " zadań"); }
         else if (k === "del") SP.confirm("Usunąć " + ids.length + " zadań?", "Zaznaczone zadania i ich podzadania trafią do kosza (30 dni na przywrócenie).").then(function (ok) { if (ok) { db.bulkDelete(ids); sel.clear(); drawBulk(); SP.toast("Przeniesiono do kosza"); } });
         else if (k === "clear") SP.clearSelection();
       });
     }
     bar.innerHTML = '<span class="bulk-n">' + sel.size + "</span><span class=\"bulk-l\">zaznaczonych</span>" +
-      [["status", "check", "Status"], ["assignees", "users", "Osoby"], ["due", "calendar", "Termin"], ["priority", "flag", "Priorytet"], ["list", "list", "Przenieś"], ["dup", "files", "Duplikuj"]].map(function (x) {
+      [["status", "check", "Status"], ["assignees", "users", "Osoby"], ["due", "calendar", "Termin"], ["priority", "flag", "Priorytet"], ["list", "list", "Przenieś"]].concat(SP.pickSprint ? [["sprint", "gauge", "Sprint"], ["points", "hash", "Punkty"]] : []).concat([["dup", "files", "Duplikuj"]]).map(function (x) {
         return '<button class="bulk-b" data-b="' + x[0] + '">' + ico(x[1], 15) + x[2] + "</button>";
       }).join("") + '<button class="bulk-b danger" data-b="del">' + ico("trash", 15) + 'Usuń</button><button class="ibtn" data-b="clear" title="Odznacz (Esc)">' + ico("x", 16) + "</button>";
   }
@@ -569,7 +578,7 @@
       '<div class="ct-foot"><button class="cell-btn" data-q="assignees">' + SP.avatars(t.assignees, "xs") + "</button>" +
       (t.due ? '<button class="cell-btn" data-q="due"><span class="due ' + d.cls + '">' + ico("calendar", 13) + d.label + "</span></button>" : "") +
       (t.priority ? '<button class="cell-btn" data-q="priority">' + SP.flag(t.priority) + "</button>" : "") +
-      '<span class="grow"></span>' +
+      '<span class="grow"></span>' + (t.points != null ? '<span class="pts" title="Punkty">' + t.points + "</span>" : "") +
       (subs.length ? '<span class="r-chip">' + ico("git-branch", 13) + subs.length + "</span>" : "") +
       (t.comments.length ? '<span class="r-chip">' + ico("message-square", 13) + t.comments.length + "</span>" : "") +
       "</div></article>";
