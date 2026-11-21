@@ -736,9 +736,7 @@
     var cards = S.body.querySelector(".xt-cards");
     S.tasks.forEach(function (t) { var c = SP.el(cardHTML(t)); c.style.visibility = "hidden"; cards.appendChild(c); });
     SP.hydrateIcons(cards); bindCards();
-    // D3vek (js/d3vek.js) właśnie „wygrzebał” zadania na własnej animacji – bez drugiego skanowania
-    var skip = SP.extractSkipScan && !S.aiMode; SP.extractSkipScan = false;
-    if (reduce || SP.extractInstant || skip) { if (S.aiMode) think(true); else reveal(true); return; }
+    if (reduce || SP.extractInstant) { if (S.aiMode) think(true); else reveal(true); return; }
     // 1) plik „rozkłada się” w dokument
     var doc = S.body.querySelector(".xt-doc"), res2 = S.body.querySelector(".xt-res");
     var a1 = doc.animate([{ clipPath: "inset(0 0 100% 0 round 14px)", transform: "translateY(10px)" }, { clipPath: "inset(0 0 0% 0 round 14px)", transform: "none" }], { duration: 650, easing: "cubic-bezier(.2,.8,.2,1)" });

@@ -30,8 +30,6 @@
 
         '<section class="card set-card"><div class="set-h"><h2>' + ico("wand-sparkles", 17) + ' Kreator konfiguracji</h2><p class="muted">' + (db.raw.profile && db.raw.profile.role ? "Twoja rola: <b>" + esc((SP.onboardRoles || {})[db.raw.profile.role] || db.raw.profile.role) + "</b>. " : "") + "Dodaj kolejną przestrzeń dopasowaną do pracy (IT, kontroling, marketing…) z folderem, listami i zaproszeniem zespołu.</p></div>" +
         '<div class="set-row"><button class="btn sm" data-a="onboard">' + ico("rocket", 15) + "Uruchom kreator</button></div></section>" +
-        '<section class="card set-card"><div class="set-h"><h2>D3vek</h2><p class="muted">Mały niebieski pomocnik w rogu ekranu: rozmawia, planuje dzień, a upuszczony na niego plik przekopuje w poszukiwaniu zadań.</p></div>' +
-        '<label class="check-row"><input type="checkbox" data-a="d3"' + (db.raw.ui.d3off ? "" : " checked") + " /> Pokazuj D3vka</label></section>" +
 
         cloudSection() +
         aiSection() +
@@ -60,7 +58,6 @@
           f.reset(); msg(f, "Hasło zmienione.");
         }, function (err) { msg(f, err.message, true); }).then(function () { btn.disabled = false; });
       });
-      var d3 = el.querySelector('[data-a="d3"]'); if (d3 && SP.d3vek) d3.onchange = function () { d3.checked ? SP.d3vek.show() : SP.d3vek.hide(); SP.toast(d3.checked ? "D3vek wrócił 💙" : "D3vek odpoczywa – włączysz go tutaj"); };
       var ob = el.querySelector('[data-a="onboard"]'); if (ob) ob.onclick = function () { if (SP.onboarding) SP.onboarding(); };
       el.querySelectorAll("[data-theme-set]").forEach(function (b) { b.onclick = function () { SPTheme.set(b.dataset.themeSet); SP.rerender(); }; });
       el.querySelector('[data-a="export"]').onclick = function () {
