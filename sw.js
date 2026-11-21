@@ -1,7 +1,7 @@
 /* Sprynt – service worker: aplikacja działa offline i da się ją zainstalować.
  * Własne pliki: najpierw sieć (zawsze najnowsza wersja), bez sieci – kopia z pamięci.
  * Biblioteki z CDN i fonty: kopia z pamięci, odświeżana w tle. Supabase i Anthropic – zawsze sieć. */
-var CACHE = "sprynt-v3";
+var CACHE = "sprynt-v4";
 var SHELL = ["./", "index.html", "app.html", "manifest.webmanifest", "css/app.css", "css/auth.css", "css/landing.css", "img/logo.svg", "img/icon-192.png", "img/icon-512.png",
   "js/ai.js", "js/anim.js", "js/app.js", "js/auth.js", "js/cloud.js", "js/config.js", "js/d3vek.js", "js/data.js", "js/extract.js", "js/extras.js", "js/files.js", "js/icons.js", "js/insights.js", "js/invite.js", "js/landing.js", "js/login.js", "js/magic.js", "js/more.js", "js/onboard.js", "js/recap.js", "js/pwa.js", "js/task.js", "js/theme.js", "js/ui.js", "js/views.js", "js/whiteboard.js"];
 self.addEventListener("install", function (e) {
