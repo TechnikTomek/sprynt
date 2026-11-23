@@ -133,6 +133,17 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Strona startowa:** sekcja `#sprinty` (grafika `.sdemo` – pętla 10 s: rysowanie spalania przez `stroke-dashoffset` w pikselach (`pathLength` zawodzi na `polyline`), prognoza, stand-up, dymek Claude; pauza poza ekranem), sekcja `#integracje` (siatka `.intg` z logotypami i zastrzeżeniem o znakach towarowych), linki w nawigacji, logo Word w scenie „Z pliku”.
 - **Test animacji strony startowej:** `--virtual-time-budget` nie przesuwa animacji CSS – zrzuty rób przez CDP w prawdziwym czasie (`Page.captureScreenshot` po N ms).
 
+## Narzędzia sprintu (`js/sprint-tools.js`, dodane 2026-11-23, czwarta partia)
+
+- Korzysta z `SP._spr` (wspólne funkcje eksportowane na końcu `sprints.js`); ładowany po `sprints.js`, przed `app.js`.
+- **Planning poker** `SP.planningPoker(sp, tasks?)`: kolejka = otwarte zadania sprintu bez punktów → backlog bez punktów → otwarte zadania sprintu. Gracze = `db.raw.people` (maks. 8), kliknięcie osoby = kto głosuje, karty 1–21/?/☕ (klawisze 1–9), Enter = odkryj (karty odwracają się 3D), statystyki (rozrzut, średnia, mediana, „Zgoda!” + konfetti), propozycja = `snapPts(mediana)`, „Zagra Claude” = `SP.ai.estimate` jako dodatkowy gracz. Zapis przez `db.updateTask(..., {points})`.
+- **Raport do druku / PDF** `SP.sprintReport(sp)`: samodzielny HTML (jasny, własny CSS `REPORT_CSS`, wykres z `burndown()`), otwierany jako Blob w nowym oknie z przyciskiem „Drukuj / zapisz PDF”.
+- **Notatki wydania** `SP.releaseNotes(sp, withAI)`: wersja podstawowa (ukończone zadania pogrupowane po listach) albo `SP.ai.releaseNotes({sprint, done, audience: team|client})` → `{title, intro, sections[], highlights[]}`. Kopiuj (Markdown), Wyślij (`SP.shareText`), Zapisz w Dokumentach (`db.createDoc` + `updateDoc`).
+- **Widżet** na stronie głównej (owinięty `views.home.render`): trwające sprinty z kondycją, mini-wykresem spalania, paskiem i „Stand-up”; bez trwających – następny zaplanowany.
+- **Przypomnienia** w Skrzynce (`db.notify(text, {href})`, wiersz z `data-href`): dzień przed końcem, w dniu końca / po terminie, opóźnienie (prognoza `off_track` od 3. dnia). Flagi w `sp.notified`. Sprawdzane 2,5 s po starcie i co 10 min.
+- **Skróty w widoku sprintu:** S stand-up, A dodaj zadania, P planning poker, R raport, W notatki wydania, I zapytaj AI (ignorowane zaraz po „G”). Opis w `SP.showShortcuts`.
+- **Ikony dodane:** `kanban-card`, `printer`, `megaphone` (thesvg, glass).
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.

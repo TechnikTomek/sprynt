@@ -144,6 +144,7 @@
       ["Ogólne", [[[mod, "K"], "Szukaj i polecenia"], [["/"], "Szukaj"], [["T"], "Nowe zadanie"], [["?"], "Ta pomoc"], [["Esc"], "Zamknij okno / odznacz zadania"]]],
       ["Zadanie", [[["Enter"], "Zapisz nazwę"], [["Enter"], "Wyślij komentarz"], [["Shift", "Enter"], "Nowa linia w komentarzu"]]],
       ["Widoki", [[["G", "H"], "Strona główna"], [["G", "I"], "Skrzynka"], [["G", "M"], "Moje zadania"], [["G", "C"], "Chmura"], [["G", "S"], "Ustawienia"], [["G", "D"], "Dokumenty"], [["G", "P"], "Pulpit"], [["G", "O"], "Cele"], [["G", "A"], "Automatyzacje"], [["G", "W"], "Tablice online"], [["G", "K"], "Czat"], [["G", "B"], "Kosz"], [["G", "R"], "Sprinty"], [["G", "T"], "Arkusz czasu"]]],
+      ["Sprint (w widoku sprintu)", [[["S"], "Stand-up"], [["A"], "Dodaj zadania z backlogu"], [["P"], "Planning poker"], [["R"], "Raport do druku / PDF"], [["W"], "Notatki wydania"], [["I"], "Zapytaj AI o sprint"]]],
       ["Tablica online", [[["V"], "Zaznaczanie"], [["H"], "Przesuwanie (albo spacja)"], [["N"], "Karteczka"], [["T"], "Tekst"], [["R"], "Prostokąt"], [["O"], "Elipsa"], [["P"], "Rysik"], [[mod, "Z"], "Cofnij"], [[mod, "D"], "Duplikuj"], [["Delete"], "Usuń zaznaczone"], [[mod, "kółko"], "Przybliżanie"]]],
     ];
     var bg = SP.el('<div class="dlg-bg kb-bg"><div class="dlg kb" role="dialog" aria-modal="true" aria-label="Skróty klawiszowe"><div class="kb-h"><h2>' + ico("keyboard", 20) + 'Skróty klawiszowe</h2><button class="ibtn" data-x>' + ico("x", 17) + "</button></div>" +

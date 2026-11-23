@@ -587,6 +587,7 @@
       (cap ? '<div class="spr-cap"><div class="spr-cap-h"><span>Zaplanowane <b>' + pts + ' pkt</b></span><span class="' + (over ? "spr-over" : "muted") + '">średnia prędkość ~' + cap + ' pkt</span></div><span class="spr-bar cap' + (over ? " over" : "") + '"><i style="width:' + Math.round(pts / scale * 100) + '%"></i></span></div>' : "") +
       '<ul class="spr-checks">' + checks.map(function (c) { return '<li class="' + (c[0] ? "ok" : "") + '">' + ico(c[0] ? "check" : "circle", 14) + "<span>" + esc(c[1]) + "</span></li>"; }).join("") + "</ul>" +
       '<div class="spr-plan-acts"><button class="chip-btn sm magic" data-a="ai-plan">' + ico("sparkles", 13) + "Zaplanuj z AI</button>" +
+      (noPts ? '<button class="chip-btn sm" data-a="poker">' + ico("kanban-card", 13) + "Planning poker (" + noPts + ")</button>" : "") +
       (noPts ? '<button class="chip-btn sm magic" data-a="ai-est">' + ico("sparkles", 13) + "Oszacuj punkty (" + noPts + ")</button>" : "") +
       (!sp.goal ? '<button class="chip-btn sm" data-a="edit">' + ico("target", 13) + "Ustaw cel</button>" : "") + "</div></div></section>";
   }
@@ -808,6 +809,7 @@
             : open.length ? { label: "Oszacuj ponownie otwarte zadania", icon: "hash", run: function () { estimateDialog(open, sp.spaceId); } } : null,
           sp.state === "active" ? { label: "Stand-up z podsumowaniem AI", icon: "users", run: function () { standupDialog(sp, true); } } : null,
           tasks.length ? { label: "Zapytaj o sprint…", icon: "message-square", run: function () { askDialog(sp); } } : null,
+          tasks.some(closed) ? { label: "Notatki wydania z AI", icon: "megaphone", run: function () { SP.releaseNotes(sp, true); } } : null,
           sp.state !== "planned" ? { label: sp.state === "done" ? "Retrospektywa z AI" : "Przegląd sprintu z AI", icon: "sparkles", run: function () {
             runReview(sp); setTimeout(function () { var r = document.getElementById("spr-retro"); if (r) r.scrollIntoView({ behavior: "smooth", block: "center" }); }, 60);
           } } : null,
@@ -821,6 +823,7 @@
         if (a === "add") addTasksDialog(sp);
         else if (a === "ai") aiMenu(b);
         else if (a === "standup") standupDialog(sp);
+        else if (a === "poker") SP.planningPoker(sp);
         else if (a === "ai-plan") { if (aiOn()) addTasksDialog(sp, { ai: true }); else { goAiSettings(); SP.toast("Dodaj klucz API Claude, żeby planować z AI"); } }
         else if (a === "ai-est") estimateDialog(noPts, sp.spaceId);
         else if (a === "edit") sprintForm(sp);
@@ -833,6 +836,10 @@
         else if (a === "more") SP.menu(b, [
           { label: "Edytuj sprint", icon: "pencil", run: function () { sprintForm(sp); } },
           sp.state === "done" ? { label: "Otwórz ponownie", icon: "repeat", run: function () { db.updateSprint(sp.id, { state: "active", closedAt: null }); } } : null,
+          { label: "Planning poker", icon: "kanban-card", run: function () { SP.planningPoker(sp); } },
+          { label: "Raport do druku / PDF", icon: "printer", run: function () { SP.sprintReport(sp); } },
+          { label: "Notatki wydania", icon: "megaphone", run: function () { SP.releaseNotes(sp); } },
+          "-",
           { label: "Kopiuj podsumowanie", icon: "copy", run: function () { copySummary(sp); } },
           { label: "Wyślij podsumowanie…", icon: "send-horizontal", run: function () { setTimeout(function () { SP.shareText(b, { subject: "Podsumowanie: " + sp.name, text: summaryText(sp) }, { align: "right" }); }, 0); } },
           { label: "Wszystkie sprinty", icon: "gauge", run: function () { location.hash = "#/sprints"; } },
@@ -1006,4 +1013,9 @@
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     SP.toast("Wyeksportowano arkusz czasu (" + label + ")");
   }
+  /** Wspólne narzędzia dla js/sprint-tools.js (planning poker, raport, notatki wydania, widżet, przypomnienia). */
+  SP._spr = { burnData: burnData, burndown: burndown, healthOf: healthOf, HEALTH: HEALTH, healthPill: healthPill, velocityOf: velocityOf, aiShell: aiShell, aiCtx: aiCtx,
+    sumPts: sumPts, personName: personName, pl: pl, shortDate: shortDate, range: range, daysBetween: daysBetween, isDay: isDay, closed: closed, byImportance: byImportance,
+    spin: spin, modelLabel: modelLabel, aiOn: aiOn, goAiSettings: goAiSettings, linkKeys: linkKeys, POINTS: POINTS, snapPts: snapPts, backlogOf: backlogOf, retroOf: retroOf,
+    spaceOfTask: spaceOfTask, statePill: statePill, standupDialog: standupDialog, askDialog: askDialog, addTasksDialog: addTasksDialog, estimateDialog: estimateDialog, summaryText: summaryText };
 })();

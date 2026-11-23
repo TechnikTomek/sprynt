@@ -220,7 +220,7 @@
         '<div class="tabs-u"><button data-tab="important" aria-pressed="' + (tab === "important") + '">Ważne<span>' + count("important") + '</span></button><button data-tab="other" aria-pressed="' + (tab === "other") + '">Inne<span>' + count("other") + '</span></button><button data-tab="cleared" aria-pressed="' + (tab === "cleared") + '">Wyczyszczone</button></div>' +
         '<div class="inbox">' + (items.map(function (n) {
           var p = db.person(n.by) || {}, t = db.task(n.taskId);
-          return '<div class="ib-row"' + (t ? ' data-task="' + t.id + '"' : "") + ">" + SP.avatar(n.by) +
+          return '<div class="ib-row' + (n.href ? " ib-link" : "") + '"' + (t ? ' data-task="' + t.id + '"' : n.href ? ' data-href="' + esc(n.href) + '"' : "") + ">" + SP.avatar(n.by) +
             '<div class="ib-b"><div><b>' + esc(p.name) + "</b> " + esc(n.text) + "</div>" + (t ? '<div class="ib-t">' + SP.statusDot(t.status) + esc(t.title) + '<span class="muted"> · ' + esc(db.pathOf(t).list.name) + "</span></div>" : "") + "</div>" +
             '<time class="muted">' + SP.ago(n.at) + "</time>" +
             (tab === "cleared" ? '<button class="ibtn" data-restore="' + n.id + '" title="Przywróć">' + ico("inbox", 16) + "</button>"
@@ -232,7 +232,8 @@
         if (c) { e.stopPropagation(); db.setNotification(c.dataset.clear, "cleared"); return; }
         if (r) { e.stopPropagation(); db.setNotification(r.dataset.restore, "important"); return; }
         if (all2) { items.forEach(function (n) { n.state = "cleared"; }); db.changed("inbox"); return; }
-        var row = e.target.closest("[data-task]"); if (row) SP.openTask(row.dataset.task);
+        var row = e.target.closest("[data-task]"); if (row) { SP.openTask(row.dataset.task); return; }
+        var lk = e.target.closest("[data-href]"); if (lk && /^#\//.test(lk.dataset.href)) location.hash = lk.dataset.href;
       });
     },
   };

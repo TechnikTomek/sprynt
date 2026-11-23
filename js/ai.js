@@ -248,6 +248,15 @@
     properties: { summary: { type: "string" }, focus: { type: "array", items: { type: "string" } }, blockers: { type: "array", items: { type: "string" } }, suggestions: { type: "array", items: { type: "string" } } },
     required: ["summary", "focus", "blockers", "suggestions"], additionalProperties: false,
   };
+  var NOTES_SCHEMA = {
+    type: "object",
+    properties: {
+      title: { type: "string" }, intro: { type: "string" },
+      sections: { type: "array", items: { type: "object", properties: { heading: { type: "string" }, items: { type: "array", items: { type: "string" } } }, required: ["heading", "items"], additionalProperties: false } },
+      highlights: { type: "array", items: { type: "string" } },
+    },
+    required: ["title", "intro", "sections", "highlights"], additionalProperties: false,
+  };
   var ASK_SCHEMA = {
     type: "object",
     properties: { answer: { type: "string" }, task_keys: { type: "array", items: { type: "string" } } },
@@ -355,6 +364,20 @@
       ].join("\n");
       var text = [sprintContext(o), "<raport_dnia>\n" + o.report + "\n</raport_dnia>", "Przygotuj stand-up."].join("\n\n");
       return askJSON({ system: sys, content: [{ type: "text", text: text }], schema: STANDUP_SCHEMA, maxTokens: 8000 }, onProgress);
+    },
+    /** Notatki wydania z ukończonych zadań sprintu. o = {sprint, done[], audience: "team"|"client"}. Wynik: {title, intro, sections[{heading, items[]}], highlights[]}. */
+    releaseNotes: function (o, onProgress) {
+      var client = o.audience === "client";
+      var sys = [
+        "Jesteś redaktorem w aplikacji Sprynt. Na podstawie ukończonych zadań sprintu piszesz notatki wydania (changelog) po polsku.",
+        client ? "Odbiorca: klient i osoby nietechniczne – pisz o korzyściach dla użytkownika, prostym językiem, bez żargonu, bez nazw wewnętrznych i bez kluczy zadań." : "Odbiorca: zespół i interesariusze – konkretnie, możesz używać nazw technicznych; na końcu punktu podaj klucze zadań w nawiasie, np. (SP-12, SP-14).",
+        "title: krótki tytuł wydania. intro: 1–2 zdania podsumowania. sections: 2–5 grup (np. „Nowości”, „Ulepszenia”, „Poprawki”, „Pod maską”) – tylko niepuste; każdy punkt to jedno zdanie, łącz drobne powiązane zadania w jeden punkt. highlights: 1–3 najważniejsze zmiany jednym zdaniem.",
+        "Nie wymyślaj zmian, których nie ma w zadaniach. " + SPRINT_RULES,
+      ].join("\n");
+      var sp = o.sprint;
+      var text = "Sprint: " + sp.name + (sp.goal ? " · cel: " + sp.goal : "") + " · " + (sp.start || "?") + " – " + (sp.end || "?") +
+        "\n\n<ukonczone_zadania>\n" + o.done.map(function (t) { return "- " + taskLine(t, { desc: 400 }); }).join("\n") + "\n</ukonczone_zadania>\n\nNapisz notatki wydania.";
+      return askJSON({ system: sys, content: [{ type: "text", text: text }], schema: NOTES_SCHEMA, maxTokens: 8000 }, onProgress);
     },
     /** Pytanie o sprint w języku naturalnym. history = [{q, a}]. Wynik: {answer, task_keys[]}. */
     askSprint: function (o, question, history, onProgress) {

@@ -487,6 +487,12 @@
     },
     updateDoc: function (id, patch) { var d = SP.db.doc(id); if (d) { Object.assign(d, patch, { updatedAt: new Date().toISOString() }); save(); } },
     deleteDoc: function (id) { var d0 = SP.db.doc(id); if (d0) trashPush("doc", d0.title, { docs: [d0] }); data.docs = data.docs.filter(function (d) { return d.id !== id; }); changed("docs"); },
+    /** Powiadomienie w Skrzynce bez zadania (np. o sprincie). o = {href, taskId, state}. */
+    notify: function (text, o) {
+      o = o || {};
+      data.notifications.unshift({ id: uid("n"), taskId: o.taskId || null, href: o.href || null, by: "me", text: text, state: o.state || "important", at: new Date().toISOString() });
+      changed("inbox");
+    },
     setNotification: function (id, state) { var n = byId(data.notifications, id); if (n) { n.state = state; changed("inbox"); } },
     /** Osoba dodana po imieniu (np. znaleziona w pliku z notatkami) – bez e-maila. */
     addPerson: function (name) {
