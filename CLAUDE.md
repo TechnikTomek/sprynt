@@ -145,6 +145,13 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - **Skróty w widoku sprintu:** S stand-up, A dodaj zadania, P planning poker, R raport, W notatki wydania, I zapytaj AI (ignorowane zaraz po „G”). Opis w `SP.showShortcuts`.
 - **Ikony dodane:** `kanban-card`, `printer`, `megaphone` (thesvg, glass).
 
+## Import z innych narzędzi (`js/import.js`, dodane 2026-11-23)
+
+- `SP.importTasks(srcId?, {spaceId})` – okno: wybór źródła → plik albo repozytorium → podgląd (statusy, osoby, terminy, punkty, tagi), wybór przestrzeni, nazwa **nowej listy**, „Dodaj do zespołu” (nieznane osoby → `db.addPerson`), „Pomiń ukończone” → `db.createList` + `db.createTask` (tagi przez `db.createTag`, link do źródła w opisie). Wejścia: menu Nowe, paleta, Ustawienia → „Przenieś zadania z innych narzędzi” (`SP.importSection`, przyciski `[data-imp]`).
+- Źródła (`SP.IMPORT_SOURCES`): **Trello** JSON (`lists`, `cards` bez zarchiwizowanych, `members`, `checklists`, etykiety; lista → status, nieznana lista → tag), **Jira/Asana/Linear/Todoist/inny CSV albo XLSX** (`fromTable`: kolumny po nazwach – `ALIAS`, także po polsku; powtórzone „Labels” z Jiry łączone; Todoist: `TYPE` task/section, `@etykiety`, „Imię (id)”), **GitHub Issues** (`api.github.com/repos/<o>/<r>/issues`, bez pull requestów, do 5 stron po 100; 404/403 po polsku).
+- Mapowanie: `mapStatus` (done/progress/review/todo po słowach kluczowych, także PL), `mapPriority` (Highest/Urgent/P1/„pilne” → urgent itd.; liczby 1–4: 1 = najwyższy dla Todoist i CSV), `parseDate` (ISO, `dd.mm.rrrr`, Jira `12/Dec/26`, `mm/dd/rrrr`, polskie zapisy przez `SP._extract.parseDue` – np. `WD+3`; `Date.parse` tylko dla tekstu z rokiem). Testy: `SP._import`.
+- Pliki czytane tylko w przeglądarce; GitHub = jedno zapytanie o publiczne zgłoszenia.
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.

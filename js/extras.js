@@ -33,6 +33,7 @@
 
         cloudSection() +
         aiSection() +
+        (SP.importSection ? SP.importSection() : "") +
 
         '<section class="card set-card"><div class="set-h"><h2>Kopia zapasowa</h2><p class="muted">Projekty, listy, zadania, komentarze, dokumenty i czas pracy w jednym pliku JSON. Zawartość plików z chmury nie wchodzi do kopii.</p></div>' +
         '<div class="set-row"><button class="btn sm" data-a="export">' + ico("download", 15) + 'Pobierz kopię</button><button class="btn sm" data-a="import">' + ico("upload", 15) + "Przywróć z kopii…</button></div></section>" +

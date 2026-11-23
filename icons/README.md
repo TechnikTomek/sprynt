@@ -95,6 +95,7 @@ Logotypy pochodzą z tego samego serwera MCP **thesvg**, ale `kind: "brand"` (wa
 | `gmail.svg`, `microsoft-outlook.svg`, `whatsapp.svg`, `telegram.svg`, `microsoft-teams.svg` | Zaproszenia, menu „Wyślij przez…” (`SP.shareText`, Teams przez `teams.microsoft.com/share`), strona startowa |
 | `google-docs.svg`, `google-sheets.svg`, `notion-light/dark.svg`, `obsidian.svg`, `markdown-light/dark.svg` | „Zadania z pliku” (z podpowiedzią, jak wyeksportować), pliki `.md` w Chmurze, notatki wydania, strona startowa |
 | `slack.svg`, `github-light/dark.svg` | „Kopiuj tekst” w menu wysyłania, notatki wydania (Markdown), strona startowa, stopka (link do repozytorium) |
+| `trello.svg`, `jira.svg`, `asana.svg`, `linear.svg`, `todoist.svg` (+ `github`) | Import z innych narzędzi (`SP.importTasks`, menu Nowe, Ustawienia, paleta), strona startowa (grupa „Przeprowadzka”) |
 | `anthropic-light/dark.svg` | Ustawienia → AI (link do konsoli), strona startowa |
 | `chrome.svg`, `edge.svg`, `safari.svg`, `firefox.svg`, `windows.svg`, `android.svg`, `linux.svg` (+ `apple`) | Okno „Zainstaluj Sprynt jako aplikację” (`SP.installHelp`), pasek „Działa wszędzie” na stronie startowej |
 

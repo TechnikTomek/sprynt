@@ -12,6 +12,8 @@ Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabel
 
 **Na start:** kreator pyta, kim jesteś (IT, kontroler finansowy, marketing…) i od razu tworzy przestrzeń, folder, listy i zaproszenia. Co tydzień – animowane podsumowanie tygodnia.
 
+**Przeprowadzka:** import z Trello (JSON), Jiry, Asany, Linear i Todoist (CSV), zgłoszeń z publicznego repozytorium GitHub albo dowolnego arkusza – z osobami, terminami, priorytetami, punktami i checklistami.
+
 **Integracje:** pliki Word, Excel, PDF i LibreOffice, kalendarze Google, Outlook i Apple (.ics), wysyłanie zaproszeń, stand-upów i podsumowań przez Gmail, Outlook, WhatsApp i Telegram. Logotypy marek pochodzą z thesvg.org.
 
 **Zaproszenia:** zaproś znajomych e-mailem, WhatsAppem, Telegramem, SMS-em albo linkiem – link otwiera Sprynt z udostępnionymi zadaniami.
