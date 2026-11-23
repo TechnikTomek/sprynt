@@ -694,7 +694,8 @@
     },
     setSprint: function (taskIds, sprintId) {
       var sp = sprintId ? byId(data.sprints, sprintId) : null;
-      SP.db.bulkUpdate(taskIds, { sprintId: sprintId || null }, sp ? "dodał(a) do „" + sp.name + "”" : "przeniósł/przeniosła do backlogu");
+      // sprintAt – kiedy zadanie weszło do sprintu (zmiana zakresu po starcie).
+      SP.db.bulkUpdate(taskIds, { sprintId: sprintId || null, sprintAt: sprintId ? new Date().toISOString() : null }, sp ? "dodał(a) do „" + sp.name + "”" : "przeniósł/przeniosła do backlogu");
     },
     /** Postęp sprintu: zadania i punkty (zadanie bez punktów liczy się jako 0 pkt). */
     sprintStats: function (id) {
@@ -702,10 +703,19 @@
       var pts = function (a) { return a.reduce(function (s, t) { return s + (Number(t.points) || 0); }, 0); };
       return { tasks: ts.length, done: done.length, points: pts(ts), pointsDone: pts(done) };
     },
+    /** Zmiana zakresu: zadania dodane po starcie sprintu (z minutą zapasu). */
+    sprintScope: function (id) {
+      var sp = byId(data.sprints, id); if (!sp || !sp.startedAt) return { tasks: 0, points: 0, ids: [] };
+      var from = new Date(sp.startedAt).getTime() + 60000;
+      var add = SP.db.sprintTasks(id).filter(function (t) { return t.sprintAt && new Date(t.sprintAt).getTime() > from; });
+      return { tasks: add.length, points: add.reduce(function (s, t) { return s + (Number(t.points) || 0); }, 0), ids: add.map(function (t) { return t.id; }) };
+    },
     startSprint: function (id) {
       var sp = byId(data.sprints, id); if (!sp) return;
       data.sprints.forEach(function (x) { if (x.spaceId === sp.spaceId && x.state === "active" && x.id !== id) x.state = "planned"; });
       sp.state = "active"; sp.startedAt = new Date().toISOString(); sp.updatedAt = sp.startedAt;
+      // Migawka planu przy starcie – do zmiany zakresu i dotrzymania planu.
+      var st0 = SP.db.sprintStats(id); sp.plan = { tasks: st0.tasks, points: st0.points, at: sp.startedAt };
       changed("sprints");
     },
     /** Zamyka sprint: zapisuje wynik, nieukończone zadania przenosi do moveTo (id sprintu) albo do backlogu (null). */
@@ -713,10 +723,12 @@
       var sp = byId(data.sprints, id); if (!sp) return null;
       var st = SP.db.sprintTasks(id), open = st.filter(function (t) { return !SP.db.status(t.status).closed; });
       sp.result = SP.db.sprintStats(id); sp.result.carried = open.length;
+      var sc = SP.db.sprintScope(id); sp.result.added = sc.tasks; sp.result.addedPoints = sc.points;
+      if (sp.plan) sp.result.planned = sp.plan.points;
       sp.state = "done"; sp.closedAt = new Date().toISOString(); sp.updatedAt = sp.closedAt;
       var to = moveTo ? byId(data.sprints, moveTo) : null;
       open.forEach(function (t) {
-        t.sprintId = to ? to.id : null; t.updatedAt = sp.closedAt;
+        t.sprintId = to ? to.id : null; t.sprintAt = to ? sp.closedAt : null; t.updatedAt = sp.closedAt;
         t.activity.push({ by: "me", text: "przeszło z „" + sp.name + "” " + (to ? "do „" + to.name + "”" : "do backlogu"), at: sp.closedAt });
       });
       changed("sprints"); return sp;

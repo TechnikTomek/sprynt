@@ -53,7 +53,7 @@
   function observeReveals(root) { $$(".reveal", root).forEach(function (el) { revObs.observe(el); }); }
 
   /* ---- Pasek funkcji (marquee) ---- */
-  var chips = [["sparkles", "Zadania z pliku"], ["spreadsheet", "Excel dla kontrolingu"], ["list", "Listy"], ["kanban", "Tablice Kanban"], ["spreadsheet", "Tabela"], ["calendar", "Kalendarz"], ["timeline", "Oś czasu"], ["clock", "Śledzenie czasu"], ["chart-column", "Pulpit z wykresami"], ["presentation", "Tablice online"], ["target", "Cele"], ["zap", "Automatyzacje"], ["message-square", "Czat zespołu"], ["spreadsheet", "Pola niestandardowe"], ["alarm-clock", "Przypomnienia"], ["lock", "Zależności"], ["repeat", "Zadania cykliczne"], ["git-branch", "Podzadania"], ["list-checks", "Checklisty"],
+  var chips = [["sparkles", "Asystent AI"], ["gauge", "Sprinty"], ["users", "Daily stand-up"], ["trophy", "Retrospektywa"], ["countdown", "Arkusz czasu"], ["sparkles", "Zadania z pliku"], ["spreadsheet", "Excel dla kontrolingu"], ["list", "Listy"], ["kanban", "Tablice Kanban"], ["spreadsheet", "Tabela"], ["calendar", "Kalendarz"], ["timeline", "Oś czasu"], ["clock", "Śledzenie czasu"], ["chart-column", "Pulpit z wykresami"], ["presentation", "Tablice online"], ["target", "Cele"], ["zap", "Automatyzacje"], ["message-square", "Czat zespołu"], ["spreadsheet", "Pola niestandardowe"], ["alarm-clock", "Przypomnienia"], ["lock", "Zależności"], ["repeat", "Zadania cykliczne"], ["git-branch", "Podzadania"], ["list-checks", "Checklisty"],
     ["file-text", "Dokumenty"], ["cloud", "Chmura na pliki"], ["paperclip", "Załączniki"], ["message-square", "Komentarze"], ["search", "Paleta Cmd+K"], ["inbox", "Skrzynka"], ["flag", "Priorytety"],
     ["tag", "Tagi"], ["star", "Ulubione"], ["moon", "Ciemny motyw"], ["users", "Praca zespołowa"]];
   var chipHTML = chips.map(function (c) { return '<span class="chip">' + ico(c[0], 18) + c[1] + "</span>"; }).join("");
@@ -67,6 +67,9 @@
     ["git-branch", "#e84393", "Podzadania i checklisty", "Duże zadanie rozbijesz na podzadania z własnymi osobami i terminami, a drobiazgi odhaczysz na liście."],
     ["search", "#f39c12", "Paleta Cmd+K", "Znajdź zadanie, listę albo dokument w sekundę. Działa nawet bez polskich znaków."],
     ["file-text", "#14b8a6", "Dokumenty obok zadań", "Specyfikacje, notatki ze spotkań i briefy z formatowaniem – w tej samej przestrzeni co praca."],
+    ["gauge", "#5b6cf9", "Sprinty z prognozą", "Wykres spalania pokazuje, czy zdążycie, zanim będzie za późno. Pojemność zespołu, obciążenie każdej osoby i zmiany zakresu w jednym widoku."],
+    ["users", "#e5484d", "Stand-up w minutę", "Kto co skończył wczoraj, nad czym pracuje dziś i co go blokuje – gotowe do wklejenia na czat zespołu."],
+    ["sparkles", "#a855f7", "Asystent sprintu (AI)", "Claude szacuje punkty, układa sprint z backlogu, odpowiada na pytania o postęp i przygotowuje retrospektywę z działaniami."],
   ];
   $("#features").innerHTML = feats.map(function (f, i) {
     return '<article class="feat reveal" style="--c:' + f[1] + ";--d:" + (i % 3) * 0.1 + 's"><div class="feat-ico">' + ico(f[0], 26) + "</div><h3>" + f[2] + "</h3><p>" + f[3] + "</p></article>";
@@ -264,6 +267,7 @@
       : ["Gdzie są przechowywane moje dane?", "Na razie konto i wszystkie dane są zapisywane lokalnie w Twojej przeglądarce. Synchronizacja z serwerem i między urządzeniami pojawi się w kolejnej wersji."],
     ["Czy mogę przenieść zadania z innego narzędzia?", "Import z CSV i z popularnych narzędzi do zarządzania projektami jest na naszej liście. Na razie zadania tworzysz ręcznie albo skrótem T."],
     ["Czy Sprynt działa na telefonie?", "Tak – aplikacja dopasowuje się do szerokości ekranu, a pasek boczny chowa się pod przyciskiem menu."],
+    ["Jak działa asystent AI w sprintach?", "Po dodaniu własnego klucza API Anthropic (Ustawienia → AI) model Claude szacuje punkty zadań, proponuje skład sprintu w granicach pojemności zespołu, podsumowuje stand-up, odpowiada na pytania o postęp i przygotowuje retrospektywę. Klucz zostaje w Twojej przeglądarce. Bez klucza prognoza, pojemność, stand-up i retrospektywa działają normalnie – tylko bez podpowiedzi AI."],
     ["Czy jest ciemny motyw?", "Jest. Przełączysz go ikoną słońca/księżyca w górnym pasku albo zostawisz „Systemowy”, żeby dopasował się do ustawień urządzenia."],
   ];
   $("#faqList").innerHTML = faq.map(function (q, i) {

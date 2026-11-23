@@ -4,7 +4,7 @@ Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabel
 
 **AI (Claude):** po dodaniu własnego klucza API Anthropic w Ustawieniach zadania z dokumentów wyciąga model Claude – naprawdę czyta treść (także PDF-y, skany i zdjęcia notatek), sprawdza dokument i wskazuje problemy. Klucz zostaje w Twojej przeglądarce.
 
-**Sprinty:** planuj pracę w 1–2-tygodniowych sprintach – oceniaj zadania w punktach, przenoś je z backlogu, śledź wykres spalania i prędkość zespołu. Na koniec sprintu nieukończone zadania same przechodzą dalej.
+**Sprinty:** planuj pracę w 1–2-tygodniowych sprintach – oceniaj zadania w punktach, przenoś je z backlogu, śledź wykres spalania i prędkość zespołu. Na koniec sprintu nieukończone zadania same przechodzą dalej Sprynt prognozuje, czy zdążycie, pilnuje pojemności zespołu, pokazuje obciążenie każdej osoby i prowadzi retrospektywę. Z AI (Claude) oszacujesz punkty, zaplanujesz sprint z backlogu i dostaniesz gotowy przegląd albo retro z działaniami. Codzienny stand-up (kto co skończył, co robi dziś, co blokuje) zrobisz jednym kliknięciem, a AI odpowie na pytania typu „czy zdążymy?” albo „kto ma najwięcej pracy?”. Historia sprintów pokazuje, jak zespół dotrzymuje planu i ile pracy dochodzi w trakcie.
 
 **Arkusz czasu:** cały tydzień godzin pracy w jednej tabeli – po zadaniach, osobach albo przestrzeniach. Dopisz czas kliknięciem w dzień i wyeksportuj do CSV.
 
