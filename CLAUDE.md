@@ -123,6 +123,16 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 - Wykresy z `insights.js` są dostępne jako `SP.charts` (`colChart`, `hBars`, `bindTips`, `hours`).
 - **Skróty G:** R sprinty, T arkusz czasu. **Ikony:** `gauge` (sprinty), `countdown` (arkusz czasu).
 
+## Logotypy, wysyłanie, strona startowa (dodane 2026-11-23, trzecia partia)
+
+- **Logotypy marek** z MCP thesvg (`kind: "brand"`) w `img/logos/*.svg`, wstawiane przez `SP.logo(slug, size, {alt, cls})` z `js/brands.js` (ładowany zaraz po `icons.js` w `app.html` i `index.html`). Apple ma dwie wersje – CSS `.logo-on-light/.logo-on-dark` wg `data-theme`. Lista i zasady: `icons/README.md`. Ikony interfejsu nadal tylko z `js/icons.js`.
+- `SP.logoSlugFor(name)` → logo Word/Excel/PDF/LibreOffice dla pliku (kafelki `SP.fileTile` w Chmurze i w „Zadaniach z pliku”).
+- `SP.shareText(anchor, {subject, text, url?})` – menu „Wyślij przez”: WhatsApp (`wa.me`), Telegram (`t.me/share`), Gmail (`mail.google.com/mail/?view=cm`), Outlook w sieci (`outlook.office.com/mail/deeplink/compose`), `mailto:`, `navigator.share`, kopiowanie; tekst > 1800 znaków jest skracany. Używane w stand-upie („Wyślij”), menu ⋯ sprintu („Wyślij podsumowanie…”) i podsumowaniu tygodnia.
+- Zaproszenia: kanały Gmail i Outlook (z adresatem) + prawdziwe logo WhatsApp/Telegram.
+- `SP.icsHelp(fileName, n)` – okno „Dodaj terminy do kalendarza” (Google, Outlook, Apple); raz na sesję po eksporcie `.ics`, zawsze z menu przestrzeni/folderu/listy.
+- **Strona startowa:** sekcja `#sprinty` (grafika `.sdemo` – pętla 10 s: rysowanie spalania przez `stroke-dashoffset` w pikselach (`pathLength` zawodzi na `polyline`), prognoza, stand-up, dymek Claude; pauza poza ekranem), sekcja `#integracje` (siatka `.intg` z logotypami i zastrzeżeniem o znakach towarowych), linki w nawigacji, logo Word w scenie „Z pliku”.
+- **Test animacji strony startowej:** `--virtual-time-budget` nie przesuwa animacji CSS – zrzuty rób przez CDP w prawdziwym czasie (`Page.captureScreenshot` po N ms).
+
 ## Chmura (pliki)
 
 - `js/files.js`: zawartość plików w IndexedDB (baza `sprynt-files`, magazyn `blobs`, klucz `<userId>:<fileId>`). Metadane (`name, size, type, uploadedAt, taskId`) w `SP.db.raw.files`.

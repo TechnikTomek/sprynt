@@ -110,7 +110,7 @@
   function aiSection() {
     if (!SP.ai) return "";
     var a = SP.ai.settings(), on = !!a.key;
-    return '<section class="card set-card" id="ai-sec"><div class="set-h"><h2>' + ico("sparkles", 17) + ' AI (Claude)</h2><p class="muted">Prawdziwe czytanie dokumentów w „Zadaniach z pliku”: model Claude od Anthropic rozumie treść notatek, PDF-ów, skanów, zdjęć i arkuszy, wyciąga zadania i sprawdza dokument (brak właścicieli, zaległe płatności, sprzeczne terminy).</p></div>' +
+    return '<section class="card set-card" id="ai-sec"><div class="set-h"><h2>' + SP.logo("claude", 18) + ' AI (Claude)</h2><p class="muted">Prawdziwe czytanie dokumentów w „Zadaniach z pliku”: model Claude od Anthropic rozumie treść notatek, PDF-ów, skanów, zdjęć i arkuszy, wyciąga zadania i sprawdza dokument (brak właścicieli, zaległe płatności, sprzeczne terminy).</p></div>' +
       '<div class="ai-st ' + (on ? "on" : "off") + '">' + ico(on ? "check" : "lock", 14) + (on ? "AI włączone – " + esc(SP.ai.modelName()) : "AI wyłączone – działa tryb podstawowy (reguły)") + "</div>" +
       '<form class="set-form" data-f="ai"><div class="dlg-field"><label for="s-aikey">Klucz API Anthropic</label><input class="input" id="s-aikey" name="key" type="password" autocomplete="off" spellcheck="false" placeholder="' + (on ? "•••• zapisany – wpisz nowy, żeby zmienić" : "sk-ant-…") + '" />' +
       '<small class="muted">Klucz utworzysz w <a class="rt-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">konsoli Anthropic</a>. Zostaje tylko w tej przeglądarce (poza kopią zapasową) i jest wysyłany wyłącznie do api.anthropic.com. Nie zapisuj go na wspólnym komputerze. Analizy są płatne z Twojego konta Anthropic.</small></div>' +

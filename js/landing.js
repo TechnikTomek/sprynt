@@ -39,7 +39,7 @@
       links.forEach(function (a) { a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id); });
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
-  ["funkcje", "widoki", "cennik", "faq"].forEach(function (id) { secObs.observe(document.getElementById(id)); });
+  ["funkcje", "widoki", "z-pliku", "sprinty", "integracje", "cennik", "faq"].forEach(function (id) { var el = document.getElementById(id); if (el) secObs.observe(el); });
 
   /* ---- Nagłówek: słowa wjeżdżają po kolei ---- */
   var h = $(".hero-h");

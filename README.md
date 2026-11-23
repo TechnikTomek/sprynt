@@ -12,6 +12,8 @@ Aplikacja do zarządzania pracą zespołu: zadania, listy, tablice Kanban, tabel
 
 **Na start:** kreator pyta, kim jesteś (IT, kontroler finansowy, marketing…) i od razu tworzy przestrzeń, folder, listy i zaproszenia. Co tydzień – animowane podsumowanie tygodnia.
 
+**Integracje:** pliki Word, Excel, PDF i LibreOffice, kalendarze Google, Outlook i Apple (.ics), wysyłanie zaproszeń, stand-upów i podsumowań przez Gmail, Outlook, WhatsApp i Telegram. Logotypy marek pochodzą z thesvg.org.
+
 **Zaproszenia:** zaproś znajomych e-mailem, WhatsAppem, Telegramem, SMS-em albo linkiem – link otwiera Sprynt z udostępnionymi zadaniami.
 
 **Zadania z pliku:** wgraj notatki, protokół, PDF albo arkusz Excel, a Sprynt wyciągnie z niego zadania dla zespołu – z osobami, terminami i priorytetami. Dla kontrolerów finansowych: checklisty zamknięcia miesiąca (terminy WD+n), niezapłacone faktury i odchylenia budżetu od wykonania.

@@ -82,3 +82,16 @@ Pobrane, ale na razie nieużywane: `circle-plus`, `funnel`, `settings`, `zap`, `
 | `alarm-clock` | Przypomnienia | Time |
 | `gauge` | Sprinty (pasek boczny, okruszki, pole „Sprint” w zadaniu) | Data |
 | `countdown` | Arkusz czasu | Time |
+
+## Logotypy marek (`img/logos/`, `js/brands.js`)
+
+Logotypy pochodzą z tego samego serwera MCP **thesvg**, ale `kind: "brand"` (wariant `default`, Apple: `light` i `dark`), pobrane spod adresów z `get_icon_url` (`cdn.jsdelivr.net/gh/glincker/thesvg@v0.6.0`). To nie są ikony interfejsu – zachowują kolory marek, więc wstawiamy je jako `<img>` (`SP.logo(slug, size)`), a nie przez `js/icons.js`. Przed dodaniem pliku sprawdź, że nie ma `<script>`, `on…=`, `href=` ani `foreignObject`.
+
+| Plik | Gdzie używamy |
+|---|---|
+| `claude.svg` | Ustawienia → AI, strona startowa (Sprinty, Integracje) |
+| `microsoft-word.svg`, `microsoft-excel.svg`, `pdf.svg`, `libreoffice.svg` | Zadania z pliku, kafelki plików w Chmurze (`SP.logoSlugFor`), strona startowa |
+| `google-calendar.svg`, `microsoft-outlook.svg`, `apple-light.svg` / `apple-dark.svg` | Okno „Dodaj terminy do kalendarza” (`SP.icsHelp`), menu eksportu, strona startowa |
+| `gmail.svg`, `microsoft-outlook.svg`, `whatsapp.svg`, `telegram.svg` | Zaproszenia, menu „Wyślij przez…” (`SP.shareText`), strona startowa |
+
+Nazwy i logotypy należą do właścicieli – używamy ich tylko do wskazania zgodności (napis pod sekcją Integracje). Nie dodajemy logo ClickUp.

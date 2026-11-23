@@ -69,7 +69,8 @@
     return b.toLocaleString("pl-PL", { maximumFractionDigits: b < 10 ? 1 : 0 }) + " " + u[i];
   };
   SP.fileTile = function (f, size) {
-    var k = KINDS[kindOf(f)];
+    var k = KINDS[kindOf(f)], b = SP.logoSlugFor && SP.logoSlugFor(f.name);
+    if (b) return '<span class="ftile ftile-brand' + (size ? " ftile-" + size : "") + '" style="--c:' + k.color + '">' + SP.logo(b, size === "lg" ? 24 : 18, { alt: "" }) + "</span>";
     return '<span class="ftile' + (size ? " ftile-" + size : "") + '" style="--c:' + k.color + '">' + ico(k.icon, size === "lg" ? 22 : 16) + "</span>";
   };
 

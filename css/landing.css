@@ -390,3 +390,80 @@ kbd { font: 600 12px/1 var(--font); padding: 3px 6px; border-radius: 6px; backgr
   .xd-card { opacity: 1; } .xd-scan { display: none; } .xd-n::after { content: "4"; }
   .xd-lines .hit { background: var(--brand-soft); border-left-color: var(--brand); color: var(--text); }
 }
+
+/* ============ Logotypy marek (thesvg) ============ */
+.brand-logo { display: inline-block; flex: none; object-fit: contain; }
+.brand-logo.logo-on-dark { display: none; }
+:root[data-theme="dark"] .brand-logo.logo-on-light { display: none; }
+:root[data-theme="dark"] .brand-logo.logo-on-dark { display: inline-block; }
+.xd-logo { width: 24px; height: 24px; flex: none; }
+
+/* ============ Sprinty z AI – grafika (pętla 10 s, pauza poza ekranem) ============ */
+.ssec-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.sdemo { --L: 10s; position: relative; height: 590px; }
+.sdemo:not(.in) *, .sdemo:not(.in) *::after { animation-play-state: paused !important; }
+.sd-card { position: absolute; left: 0; top: 0; width: 88%; padding: 18px 18px 14px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 30px 60px -30px rgba(16, 24, 40, .45); }
+.sd-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; }
+.sd-pill { padding: 2px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: #fff; }
+.sd-pill.run { background: #5b6cf9; }
+.sd-pill.ok { background: #1aae6f; animation: sdPill var(--L) infinite; }
+.sd-days { margin-left: auto; font-size: 12px; color: var(--text-2); }
+.sd-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 6px; }
+.sd-kpis div { padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--brand) 6%, transparent); }
+.sd-kpis small { display: block; font-size: 11px; color: var(--text-2); }
+.sd-kpis b { font-size: 18px; letter-spacing: -.02em; }
+.sd-chart { width: 100%; height: auto; display: block; }
+.sd-grid line { stroke: var(--line); stroke-width: 1; }
+.sd-ideal { stroke: color-mix(in srgb, var(--text-2) 45%, transparent); stroke-width: 2; stroke-dasharray: 5 5; }
+.sd-line { fill: none; stroke: var(--brand); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 214; stroke-dashoffset: 214; animation: sdDraw var(--L) var(--ease) infinite; }
+.sd-fc { fill: none; stroke: #f0a020; stroke-width: 2.5; stroke-dasharray: 1 6; stroke-linecap: round; opacity: 0; animation: sdFc var(--L) infinite; }
+.sd-today { stroke: #e84393; stroke-width: 1.5; stroke-dasharray: 2 4; opacity: .7; }
+.sd-dot { fill: var(--panel); stroke: var(--brand); stroke-width: 3; transform-box: fill-box; transform-origin: center; transform: scale(0); animation: sdDot var(--L) var(--spring) infinite; }
+.sd-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--text-2); }
+.sd-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sd-legend i { width: 16px; height: 0; border-top: 2px dashed color-mix(in srgb, var(--text-2) 45%, transparent); }
+.sd-legend .k-line { border-top: 3px solid var(--brand); }
+.sd-legend .k-fc { border-top: 2.5px dotted #f0a020; }
+.sd-su { position: absolute; right: 0; top: 318px; width: 56%; padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 50px -24px rgba(16, 24, 40, .5); font-size: 12.5px; opacity: 0; animation: sdPop var(--L) var(--spring) infinite; animation-delay: 0s; --t0: 30%; }
+.sd-su-h { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.sd-ico { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 7px; background: var(--brand-soft); color: var(--brand); }
+.sd-su p { display: flex; align-items: center; gap: 8px; margin: 5px 0; color: var(--text-2); }
+.sd-su p b { color: var(--text); }
+.sd-su p.bad span { color: #e5484d; }
+.sd-su .xd-av { width: 22px; height: 22px; font-size: 8.5px; }
+.sd-ai { position: absolute; left: 4%; top: 472px; width: 62%; display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 16px 16px 16px 4px; background: var(--panel); border: 1px solid color-mix(in srgb, #d97757 45%, var(--line)); box-shadow: 0 24px 50px -24px rgba(217, 119, 87, .55); font-size: 12.5px; opacity: 0; animation: sdPop2 var(--L) var(--spring) infinite; }
+.sd-ai > div { min-width: 0; position: relative; }
+.sd-ai b { font-size: 12.5px; color: #d97757; }
+.sd-ai p { margin: 3px 0 0; color: var(--text-2); line-height: 1.45; }
+.sd-typing { position: absolute; left: 0; top: 18px; display: flex; gap: 4px; height: 16px; align-items: center; animation: sdTyping var(--L) infinite; }
+.sd-typing i { width: 6px; height: 6px; border-radius: 50%; background: #d97757; animation: sdBounce .9s ease-in-out infinite; }
+.sd-typing i:nth-child(2) { animation-delay: .15s; } .sd-typing i:nth-child(3) { animation-delay: .3s; }
+.sd-msg { animation: sdMsg var(--L) infinite; }
+@keyframes sdDraw { 0%, 4% { stroke-dashoffset: 214; opacity: 1; } 26%, 92% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes sdDot { 0%, 25% { transform: scale(0); } 30%, 92% { transform: scale(1); } 100% { transform: scale(0); } }
+@keyframes sdFc { 0%, 30% { opacity: 0; } 38%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sdPill { 0%, 34% { opacity: 0; transform: scale(.7); } 40%, 94% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes sdPop { 0%, 40% { opacity: 0; transform: translateY(18px) scale(.96); } 46%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
+@keyframes sdPop2 { 0%, 54% { opacity: 0; transform: translateY(18px) scale(.96); } 60%, 92% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px); } }
+@keyframes sdTyping { 0%, 69% { opacity: 1; } 71%, 100% { opacity: 0; } }
+@keyframes sdMsg { 0%, 70% { opacity: 0; } 73%, 100% { opacity: 1; } }
+@keyframes sdBounce { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-4px); opacity: 1; } }
+
+/* ============ Integracje ============ */
+.intg-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 34px; }
+.intg { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); transition: transform .35s var(--spring), box-shadow .3s, border-color .3s; }
+.intg:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -22px rgba(16, 24, 40, .35); border-color: color-mix(in srgb, var(--brand) 35%, var(--line)); }
+.intg.wide { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, #d97757 9%, var(--panel)), var(--panel) 60%); }
+.intg-logo { width: 56px; height: 56px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line), 0 8px 20px -12px rgba(16, 24, 40, .35); }
+.intg.wide .intg-logo { width: 64px; height: 64px; }
+.intg:hover .intg-logo .brand-logo { animation: intgWiggle .5s var(--spring); }
+.intg h3 { font-size: 16px; margin: 2px 0 4px; letter-spacing: -.01em; }
+.intg p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-2); }
+.intg-note { margin-top: 18px; font-size: 12.5px; color: var(--text-2); opacity: .8; }
+@keyframes intgWiggle { 0% { transform: none; } 35% { transform: rotate(-8deg) scale(1.08); } 70% { transform: rotate(5deg) scale(1.04); } 100% { transform: none; } }
+@media (max-width: 960px) { .intg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sdemo { height: 600px; } }
+@media (max-width: 600px) { .intg-grid { grid-template-columns: 1fr; } .intg.wide { grid-column: auto; } .sdemo { transform: scale(.86); transform-origin: 0 0; width: 116%; height: 520px; } .sd-su { width: 70%; } .sd-ai { width: 82%; } }
+@media (prefers-reduced-motion: reduce) {
+  .sdemo *, .sdemo *::after { animation: none !important; }
+  .sd-line { stroke-dashoffset: 0; } .sd-fc, .sd-su, .sd-ai, .sd-pill.ok { opacity: 1; } .sd-dot { transform: none; } .sd-typing { opacity: 0; } .sd-msg { opacity: 1; }
+}

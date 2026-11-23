@@ -71,7 +71,7 @@
       "<h2>" + (s.next.length ? s.next.length + " " + plural(s.next.length, "zadanie czeka", "zadania czekają", "zadań czeka") + " na Ciebie" : "Czysto! Nic nie ma terminu w najbliższym tygodniu") + "</h2>" +
       (s.overdue ? '<div class="rc-warn">' + s.overdue + " " + plural(s.overdue, "zaległe zadanie", "zaległe zadania", "zaległych zadań") + " – warto je przejrzeć</div>" : "") +
       '<div class="rc-list">' + s.next.slice(0, 4).map(function (t, i) { var d = SP.fmtDue(t.due); return '<button class="rc-row" data-open="' + t.id + '" style="--i:' + i + '">' + SP.statusDot(t.status) + "<span>" + esc(t.title) + '</span><em class="due ' + d.cls + '">' + d.label + "</em></button>"; }).join("") + "</div>" +
-      '<div class="rc-acts"><a class="btn primary" href="#/my-tasks" data-close>' + ico("list-checks", 16) + 'Moje zadania</a><button class="btn" data-share>' + ico("copy", 16) + "Kopiuj podsumowanie</button></div>", final: true });
+      '<div class="rc-acts"><a class="btn primary" href="#/my-tasks" data-close>' + ico("list-checks", 16) + 'Moje zadania</a><button class="btn" data-share>' + ico("copy", 16) + "Kopiuj podsumowanie</button>" + '<button class="btn" data-send>' + ico("send-horizontal", 16) + "Wyślij…</button></div>", final: true });
     return out;
   }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -100,6 +100,8 @@
       var b;
       if (e.target.closest("[data-close]")) { close(); return; }
       if ((b = e.target.closest("[data-open]"))) { var id = b.dataset.open; close(); SP.openTask(id); return; }
+      var snd = e.target.closest("[data-send]");
+      if (snd && SP.shareText) { SP.shareText(snd, { subject: "Podsumowanie tygodnia – Sprynt", text: textSummary(R.s) }); return; }
       if (e.target.closest("[data-share]")) { var txt = textSummary(R.s); (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { SP.toast("Skopiowano – wklej na czacie albo w mailu"); }, function () { SP.toast("Nie udało się skopiować"); }); return; }
       if ((b = e.target.closest("[data-nav]"))) go(R.i + Number(b.dataset.nav));
     });

@@ -77,8 +77,10 @@
       s2.innerHTML = '<p class="inv-ok">' + ico("check", 16) + "Zaproszenie gotowe" + (names ? " – udostępniasz " + esc(names) : "") + ". Wyślij je:</p>" +
         '<div class="inv-ch">' +
         (mails.length ? '<button type="button" class="inv-b" data-via="email">' + ico("mail", 20) + "<b>E-mail</b><small>" + esc(mails.join(", ")) + "</small></button>" : "") +
-        '<button type="button" class="inv-b" data-via="whatsapp"><span class="inv-logo wa">WA</span><b>WhatsApp</b><small>wiadomość z linkiem</small></button>' +
-        '<button type="button" class="inv-b" data-via="telegram"><span class="inv-logo tg">TG</span><b>Telegram</b><small>wiadomość z linkiem</small></button>' +
+        (mails.length ? '<button type="button" class="inv-b" data-via="gmail">' + SP.logo("gmail", 22) + "<b>Gmail</b><small>w przeglądarce</small></button>" +
+          '<button type="button" class="inv-b" data-via="outlook">' + SP.logo("microsoft-outlook", 22) + "<b>Outlook</b><small>Outlook w sieci</small></button>" : "") +
+        '<button type="button" class="inv-b" data-via="whatsapp">' + SP.logo("whatsapp", 22) + '<b>WhatsApp</b><small>wiadomość z linkiem</small></button>' +
+        '<button type="button" class="inv-b" data-via="telegram">' + SP.logo("telegram", 22) + '<b>Telegram</b><small>wiadomość z linkiem</small></button>' +
         '<button type="button" class="inv-b" data-via="sms">' + ico("message-square", 20) + "<b>SMS</b><small>na telefonie</small></button>" +
         (navigator.share ? '<button type="button" class="inv-b" data-via="share">' + ico("arrow-up-right", 20) + "<b>Udostępnij…</b><small>Messenger, AirDrop i inne</small></button>" : "") +
         '<button type="button" class="inv-b" data-via="file">' + ico("download", 20) + "<b>Plik zaproszenia</b><small>do wysłania jako załącznik</small></button>" +
@@ -95,7 +97,9 @@
         if (via === "email") {
           if (link.length > 1800) SP.toast("Link jest długi – jeśli program pocztowy go utnie, użyj „Kopiuj link”.");
           location.href = "mailto:" + encodeURIComponent(mails.join(",")).replace(/%40/g, "@").replace(/%2C/g, ",") + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-        } else if (via === "whatsapp") window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
+        } else if (via === "gmail") window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(mails.join(",")) + "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+        else if (via === "outlook") window.open("https://outlook.office.com/mail/deeplink/compose?to=" + encodeURIComponent(mails.join(",")) + "&subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+        else if (via === "whatsapp") window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
         else if (via === "telegram") window.open("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent(msg), "_blank", "noopener");
         else if (via === "sms") location.href = "sms:?&body=" + encodeURIComponent(text);
         else if (via === "share") { navigator.share({ title: subject, text: msg, url: link }).catch(function () {}); }
@@ -116,7 +120,7 @@
   };
 
   /* =================== Zespół =================== */
-  var VIA = { email: "e-mailem", whatsapp: "WhatsAppem", telegram: "Telegramem", sms: "SMS-em", share: "przez Udostępnij", file: "plikiem", link: "linkiem" };
+  var VIA = { gmail: "przez Gmail", outlook: "przez Outlook", email: "e-mailem", whatsapp: "WhatsAppem", telegram: "Telegramem", sms: "SMS-em", share: "przez Udostępnij", file: "plikiem", link: "linkiem" };
   views.team = {
     title: function () { return "Zespół"; },
     crumbs: function () { return [{ icon: "users", label: "Zespół" }]; },

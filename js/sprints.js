@@ -639,13 +639,16 @@
     }).join("") || '<div class="empty-s">W sprincie nie ma jeszcze zadań.</div>') + "</div>";
     S.info.textContent = d.people.length ? pl(d.people.reduce(function (s, p) { return s + p.done.length; }, 0), "zadanie ukończone", "zadania ukończone", "zadań ukończonych") + " od " + (d.sinceLbl === "Wczoraj" ? "wczoraj" : shortDate(d.since)) + " · " +
       pl(d.people.reduce(function (s, p) { return s + p.blocked.length; }, 0), "bloker", "blokery", "blokerów") : "";
-    S.acts.innerHTML = '<button class="btn sm" data-copy>' + ico("copy", 14) + "Kopiuj</button>" + '<button class="btn sm magic" data-su-ai>' + ico("sparkles", 14) + "<span>" + (aiOn() ? "Podsumuj z AI" : "Włącz AI") + "</span></button>";
+    S.acts.innerHTML = '<button class="btn sm" data-copy>' + ico("copy", 14) + "Kopiuj</button>" + '<button class="btn sm" data-send>' + ico("send-horizontal", 14) + "Wyślij</button>" + '<button class="btn sm magic" data-su-ai>' + ico("sparkles", 14) + "<span>" + (aiOn() ? "Podsumuj z AI" : "Włącz AI") + "</span></button>";
     SP.hydrateIcons(S.bg);
     var aiEl = S.body.querySelector(".su-ai"), aiRes = null;
-    function copy() {
+    function fullText() {
       var text = standupText(sp, d);
       if (aiRes) text = "Podsumowanie: " + aiRes.summary + (aiRes.focus.length ? "\nNa dziś:\n" + aiRes.focus.map(function (x) { return "- " + x; }).join("\n") : "") + (aiRes.blockers.length ? "\nZagrożenia:\n" + aiRes.blockers.map(function (x) { return "- " + x; }).join("\n") : "") + "\n\n" + text;
-      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { SP.toast("Skopiowano stand-up – wklej na czat zespołu"); }, function () { SP.toast("Nie udało się skopiować"); });
+      return text;
+    }
+    function copy() {
+      (navigator.clipboard ? navigator.clipboard.writeText(fullText()) : Promise.reject()).then(function () { SP.toast("Skopiowano stand-up – wklej na czat zespołu"); }, function () { SP.toast("Nie udało się skopiować"); });
     }
     function askAI() {
       if (!aiOn()) { S.close(); goAiSettings(); SP.toast("Dodaj klucz API Claude, żeby AI podsumowało stand-up"); return; }
@@ -668,6 +671,8 @@
     S.bg.addEventListener("click", function (e) {
       var t = e.target.closest("[data-t]");
       if (t) { S.close(); SP.openTask(t.dataset.t); return; }
+      var snd = e.target.closest("[data-send]");
+      if (snd) { SP.shareText(snd, { subject: "Stand-up – " + sp.name + ", " + shortDate(D.today()), text: fullText() }); return; }
       if (e.target.closest("[data-copy]")) copy();
       else if (e.target.closest("[data-su-ai]")) askAI();
     });
@@ -829,6 +834,7 @@
           { label: "Edytuj sprint", icon: "pencil", run: function () { sprintForm(sp); } },
           sp.state === "done" ? { label: "Otwórz ponownie", icon: "repeat", run: function () { db.updateSprint(sp.id, { state: "active", closedAt: null }); } } : null,
           { label: "Kopiuj podsumowanie", icon: "copy", run: function () { copySummary(sp); } },
+          { label: "Wyślij podsumowanie…", icon: "send-horizontal", run: function () { setTimeout(function () { SP.shareText(b, { subject: "Podsumowanie: " + sp.name, text: summaryText(sp) }, { align: "right" }); }, 0); } },
           { label: "Wszystkie sprinty", icon: "gauge", run: function () { location.hash = "#/sprints"; } },
           "-",
           { label: "Usuń sprint", icon: "trash", danger: true, run: function () {
@@ -879,6 +885,10 @@
   };
   /** Podsumowanie sprintu jako tekst (do czatu, e-maila, raportu). */
   function copySummary(sp) {
+    var text = summaryText(sp);
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { SP.toast("Skopiowano podsumowanie " + sp.name); }, function () { SP.form({ title: "Podsumowanie " + sp.name, submit: "Zamknij", fields: [{ name: "t", label: "Skopiuj tekst", type: "textarea", value: text }] }); });
+  }
+  function summaryText(sp) {
     var tasks = db.sprintTasks(sp.id), st = sp.state === "done" && sp.result ? sp.result : db.sprintStats(sp.id), r = retroOf(sp);
     var lines = [sp.name + " (" + range(sp.start, sp.end) + ")" + (sp.goal ? " – cel: " + sp.goal : ""),
       "Postęp: " + st.done + "/" + st.tasks + " zadań, " + st.pointsDone + "/" + st.points + " pkt" + (st.carried ? ", przeniesione: " + st.carried : ""), ""];
@@ -887,8 +897,7 @@
     if (open.length) lines.push("W toku / do zrobienia:", open.map(function (t) { return "• " + db.taskKey(t) + " " + t.title + " – " + db.status(t.status).name; }).join("\n"), "");
     if (r.summary) lines.push("Podsumowanie: " + r.summary, "");
     [["Dobrze", r.good], ["Do poprawy", r.bad], ["Działania", r.actions]].forEach(function (g) { if (g[1].length) lines.push(g[0] + ":", g[1].map(function (x) { return "- " + x.text; }).join("\n"), ""); });
-    var text = lines.join("\n").trim();
-    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () { SP.toast("Skopiowano podsumowanie " + sp.name); }, function () { SP.form({ title: "Podsumowanie " + sp.name, submit: "Zamknij", fields: [{ name: "t", label: "Skopiuj tekst", type: "textarea", value: text }] }); });
+    return lines.join("\n").trim();
   }
 
   /* =================== Arkusz czasu: #/timesheet =================== */

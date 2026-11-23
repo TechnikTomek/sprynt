@@ -279,6 +279,30 @@
     var url = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" })), a = document.createElement("a");
     a.href = url; a.download = (node.name || "Sprynt").replace(/[\\/:*?"<>|]+/g, "-") + ".ics"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
     SP.toast("Wyeksportowano " + tasks.length + " terminów – otwórz plik w Kalendarzu Google, Apple albo Outlooku");
+    if (!icsHelpShown) { icsHelpShown = true; setTimeout(function () { SP.icsHelp(a.download, tasks.length); }, 300); }
+  };
+  /** Jak dodać plik .ics do kalendarza – Google, Outlook, Apple (logotypy z thesvg). Raz na sesję po eksporcie, potem z menu. */
+  var icsHelpShown = false;
+  SP.icsHelp = function (fileName, n) {
+    var steps = [
+      ["google-calendar", "Kalendarz Google", "Ustawienia → Importuj i eksportuj → Wybierz plik z komputera → Importuj.", "https://calendar.google.com/calendar/r/settings/export", "Otwórz import"],
+      ["microsoft-outlook", "Outlook", "Kalendarz → Dodaj kalendarz → Przekaż z pliku. W aplikacji na komputerze wystarczy otworzyć plik.", "https://outlook.live.com/calendar/0/addcalendar", "Otwórz Outlook"],
+      ["apple", "Kalendarz Apple", "Kliknij dwa razy pobrany plik (Mac, iPhone, iPad) i wybierz kalendarz, do którego dodać wydarzenia.", null, null],
+    ];
+    var bg = SP.el('<div class="dlg-bg"><div class="dlg ics-help" role="dialog" aria-modal="true" aria-label="Dodaj terminy do kalendarza"><h2>Dodaj terminy do kalendarza</h2>' +
+      '<p class="muted">' + (fileName ? "Pobrano „" + esc(fileName) + "”" + (n ? " (" + n + " " + (n === 1 ? "termin" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "terminy" : "terminów") + ")" : "") + ". " : "") + "Plik .ics działa w każdym kalendarzu:</p>" +
+      '<div class="ics-list">' + steps.map(function (s) {
+        return '<div class="ics-i"><span class="ics-logo">' + SP.logo(s[0], 30) + "</span><div><b>" + s[1] + "</b><small class=\"muted\">" + s[2] + "</small></div>" +
+          (s[3] ? '<a class="btn sm" href="' + s[3] + '" target="_blank" rel="noopener noreferrer">' + s[4] + "</a>" : "") + "</div>";
+      }).join("") + "</div>" +
+      '<p class="muted ics-note">' + ico("repeat", 13) + "To kopia z tej chwili – po zmianie terminów wyeksportuj plik ponownie.</p>" +
+      '<div class="dlg-acts"><button class="btn primary" data-ok>Gotowe</button></div></div></div>');
+    function close() { bg.remove(); document.removeEventListener("keydown", onKey, true); }
+    function onKey(e) { if (e.key === "Escape") { e.stopPropagation(); close(); } }
+    document.addEventListener("keydown", onKey, true);
+    bg.addEventListener("mousedown", function (e) { if (e.target === bg) close(); });
+    bg.querySelector("[data-ok]").onclick = close;
+    document.body.appendChild(bg); SP.hydrateIcons(bg); bg.querySelector("[data-ok]").focus();
   };
 
   /* =================== Tryb skupienia (Pomodoro) =================== */

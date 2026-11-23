@@ -189,7 +189,7 @@
 
   <script>
     (function () {
-      var files = SP_SIGNED_IN ? ["icons", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "ai", "extract", "magic", "recap", "onboard", "invite", "cloud", "anim", "sprints", "app"] : ["icons", "login"];
+      var files = SP_SIGNED_IN ? ["icons", "brands", "data", "ui", "files", "task", "views", "extras", "insights", "whiteboard", "more", "ai", "extract", "magic", "recap", "onboard", "invite", "cloud", "anim", "sprints", "app"] : ["icons", "login"];
       if (!SP_SIGNED_IN) {
         var app = document.querySelector(".app"); if (app) app.remove();
         document.querySelectorAll(".pal-bg, .toast").forEach(function (e) { e.remove(); });

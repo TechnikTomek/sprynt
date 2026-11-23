@@ -26,7 +26,7 @@
       <nav class="nav-links" aria-label="Sekcje">
         <a href="#funkcje">Funkcje</a>
         <a href="#widoki">Widoki</a>
-        <a href="#z-pliku">Z pliku</a><a href="#cennik">Cennik</a>
+        <a href="#z-pliku">Z pliku</a><a href="#sprinty">Sprinty</a><a href="#integracje">Integracje</a><a href="#cennik">Cennik</a>
         <a href="#faq">FAQ</a>
       </nav>
       <div class="nav-acts">
@@ -127,7 +127,7 @@
         </div>
         <div class="xdemo reveal" aria-hidden="true">
           <div class="xd-doc">
-            <div class="xd-doc-h"><span class="xd-tile">W</span>Notatki – zespół.docx</div>
+            <div class="xd-doc-h"><img class="xd-logo" src="img/logos/microsoft-word.svg" width="24" height="24" alt="" />Notatki – zespół.docx</div>
             <div class="xd-lines">
               <p>Ustalenia ze spotkania</p>
               <p class="hit" style="--t:1.1">– Marek: umowa z dostawcą do 30.11</p>
@@ -148,6 +148,72 @@
             <div class="xd-card" style="--t:2.6;--dy:30px;top:252px"><b>Zapłacić FV/0418</b><span><i class="xd-av" style="--c:#e84393">EL</i><em>18 450 zł</em></span></div>
           </div>
         </div>
+      </div>
+    </section>
+
+
+    <!-- ============ SPRINTY Z AI ============ -->
+    <section class="sec ssec" id="sprinty">
+      <div class="wrap xsec-grid ssec-grid">
+        <div class="sdemo reveal" aria-hidden="true">
+          <div class="sd-card">
+            <div class="sd-h"><b>Sprint 7</b><span class="sd-pill run">Trwa</span><span class="sd-pill ok">Na dobrej drodze</span><span class="sd-days">dzień 6 z 10</span></div>
+            <div class="sd-kpis"><div><small>Punkty</small><b>21 / 34</b></div><div><small>Zadania</small><b>9 / 14</b></div><div><small>Pojemność</small><b>~36 pkt</b></div></div>
+            <svg class="sd-chart" viewBox="0 0 400 170">
+              <g class="sd-grid"><line x1="30" x2="390" y1="20" y2="20"/><line x1="30" x2="390" y1="60" y2="60"/><line x1="30" x2="390" y1="100" y2="100"/><line x1="30" x2="390" y1="140" y2="140"/></g>
+              <line class="sd-ideal" x1="30" y1="20" x2="390" y2="140"/>
+              <path class="sd-line" d="M30 20L70 28L110 44L150 52L190 74L230 86"/>
+              <path class="sd-fc" d="M230 86L370 140"/>
+              <line class="sd-today" x1="230" x2="230" y1="14" y2="144"/>
+              <circle class="sd-dot" cx="230" cy="86" r="5"/>
+            </svg>
+            <div class="sd-legend"><span><i class="k-ideal"></i>Plan</span><span><i class="k-line"></i>Pozostało</span><span><i class="k-fc"></i>Prognoza: skończycie w czwartek</span></div>
+          </div>
+          <div class="sd-su">
+            <div class="sd-su-h"><span class="sd-ico" data-icon="users" data-size="15"></span>Stand-up</div>
+            <p><i class="xd-av" style="--c:#e84393">AN</i><span><b>Anna</b> ✓ Płatności PayU · dziś: e-maile</span></p>
+            <p><i class="xd-av" style="--c:#00a884">MW</i><span><b>Marek</b> dziś: testy koszyka</span></p>
+            <p class="bad"><i class="xd-av" style="--c:#6c5ce7">TT</i><span><b>Tomek</b> ⚠ SP-15 czeka na SP-12</span></p>
+          </div>
+          <div class="sd-ai">
+            <img class="brand-logo" src="img/logos/claude.svg" width="22" height="22" alt="" />
+            <div><b>Claude</b><p class="sd-typing"><i></i><i></i><i></i></p><p class="sd-msg">Zacznijcie od SP-12 – odblokuje SP-15 i zdążycie z celem sprintu. Anna ma najwięcej pracy: SP-9 może wziąć Marek.</p></div>
+          </div>
+        </div>
+        <div class="xsec-txt">
+          <p class="kicker reveal">Sprinty · Asystent AI</p>
+          <h2 class="sec-h reveal">Wiesz, czy zdążycie – <span class="grad">zanim minie termin.</span></h2>
+          <p class="xsec-lead reveal">Wykres spalania z prognozą, pojemność zespołu i obciążenie każdej osoby. Claude oszacuje punkty, ułoży sprint z backlogu i powie, co blokuje cel.</p>
+          <ul class="xsec-list">
+            <li class="reveal" style="--d:.05s"><span class="xsec-ico" data-icon="gauge" data-size="18"></span><span><b>Prognoza i pojemność</b> – „W obecnym tempie skończycie w czwartek”, ostrzeżenie „Ponad pojemność”</span></li>
+            <li class="reveal" style="--d:.12s"><span class="xsec-ico" data-icon="users" data-size="18"></span><span><b>Stand-up w minutę</b> – zrobione, dziś, blokery; wyślesz na WhatsApp, Telegram albo Gmail</span></li>
+            <li class="reveal" style="--d:.19s"><span class="xsec-ico" data-icon="trophy" data-size="18"></span><span><b>Retrospektywa z działaniami</b> – AI podpowiada wnioski, a działania zamieniasz w zadania</span></li>
+          </ul>
+          <a class="btn dark lg reveal" href="app.html#register" data-auth="cta">Zaplanuj pierwszy sprint <span data-icon="arrow-right" data-size="18"></span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INTEGRACJE ============ -->
+    <section class="sec" id="integracje">
+      <div class="wrap">
+        <p class="kicker reveal">Integracje</p>
+        <h2 class="sec-h reveal">Działa z narzędziami, których już używacie</h2>
+        <p class="xsec-lead reveal">Pliki z pakietu Office i LibreOffice, kalendarze, poczta i komunikatory – bez instalowania wtyczek.</p>
+        <div class="intg-grid">
+          <article class="intg reveal wide" style="--d:0.00s"><span class="intg-logo"><img class="brand-logo" src="img/logos/claude.svg" width="44" height="44" alt="" /></span><div><h3>Claude</h3><p>Asystent AI w całej aplikacji: czyta dokumenty, szacuje punkty, planuje sprint, podsumowuje stand-up i przygotowuje retrospektywę.</p></div></article>
+          <article class="intg reveal" style="--d:0.06s"><span class="intg-logo"><img class="brand-logo" src="img/logos/microsoft-word.svg" width="36" height="36" alt="" /></span><div><h3>Microsoft Word</h3><p>Zadania z notatek, protokołów i briefów (.docx).</p></div></article>
+          <article class="intg reveal" style="--d:0.12s"><span class="intg-logo"><img class="brand-logo" src="img/logos/microsoft-excel.svg" width="36" height="36" alt="" /></span><div><h3>Microsoft Excel</h3><p>Checklisty, faktury do zapłaty i budżety z arkuszy (.xlsx, .xls, .csv).</p></div></article>
+          <article class="intg reveal" style="--d:0.18s"><span class="intg-logo"><img class="brand-logo" src="img/logos/pdf.svg" width="36" height="36" alt="" /></span><div><h3>PDF</h3><p>Protokoły i umowy – z AI także skany bez warstwy tekstu.</p></div></article>
+          <article class="intg reveal" style="--d:0.00s"><span class="intg-logo"><img class="brand-logo" src="img/logos/libreoffice.svg" width="36" height="36" alt="" /></span><div><h3>LibreOffice</h3><p>Dokumenty i arkusze .odt i .ods.</p></div></article>
+          <article class="intg reveal" style="--d:0.06s"><span class="intg-logo"><img class="brand-logo" src="img/logos/google-calendar.svg" width="36" height="36" alt="" /></span><div><h3>Kalendarz Google</h3><p>Terminy zadań jako plik .ics – import w dwa kliknięcia.</p></div></article>
+          <article class="intg reveal" style="--d:0.12s"><span class="intg-logo"><img class="brand-logo" src="img/logos/microsoft-outlook.svg" width="36" height="36" alt="" /></span><div><h3>Outlook</h3><p>Kalendarz .ics, zaproszenia i stand-upy w Outlooku w sieci.</p></div></article>
+          <article class="intg reveal" style="--d:0.18s"><span class="intg-logo"><img class="brand-logo logo-on-light" src="img/logos/apple-light.svg" width="36" height="36" alt="Apple" /><img class="brand-logo logo-on-dark" src="img/logos/apple-dark.svg" width="36" height="36" alt="Apple" /></span><div><h3>Kalendarz Apple</h3><p>Terminy na Macu, iPhonie i iPadzie (.ics).</p></div></article>
+          <article class="intg reveal" style="--d:0.00s"><span class="intg-logo"><img class="brand-logo" src="img/logos/gmail.svg" width="36" height="36" alt="" /></span><div><h3>Gmail</h3><p>Zaproszenia, stand-upy i podsumowania gotowe do wysłania.</p></div></article>
+          <article class="intg reveal" style="--d:0.06s"><span class="intg-logo"><img class="brand-logo" src="img/logos/whatsapp.svg" width="36" height="36" alt="" /></span><div><h3>WhatsApp</h3><p>Link z zaproszeniem albo podsumowanie sprintu w wiadomości.</p></div></article>
+          <article class="intg reveal" style="--d:0.12s"><span class="intg-logo"><img class="brand-logo" src="img/logos/telegram.svg" width="36" height="36" alt="" /></span><div><h3>Telegram</h3><p>To samo w Telegramie – jednym kliknięciem.</p></div></article>
+        </div>
+        <p class="intg-note reveal">Nazwy i logotypy należą do ich właścicieli i służą tylko do wskazania zgodności. Sprynt nie jest powiązany z tymi firmami.</p>
       </div>
     </section>
 
@@ -232,6 +298,7 @@
   </footer>
 
   <script src="js/icons.js"></script>
+  <script src="js/brands.js"></script>
   <script src="js/landing.js"></script>
 </body>
 </html>

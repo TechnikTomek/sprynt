@@ -636,13 +636,14 @@
       '<label class="xt-drop" tabindex="0"><input type="file" hidden accept=".txt,.md,.markdown,.csv,.tsv,.docx,.odt,.pdf,.html,.htm,.xlsx,.xlsm,.xls,.ods' + (aiOn() ? ",.png,.jpg,.jpeg,.webp,.gif" : "") + '" />' +
       '<span class="xt-drop-ico">' + ico("file-dropzone", 40) + '</span><b>Upuść plik albo kliknij, żeby wybrać</b>' +
       '<span class="muted">Notatki ze spotkania, brief, specyfikacja, protokół, checklista zamknięcia miesiąca, lista faktur, budżet…</span>' +
+      '<span class="xt-brands" aria-label="Word, Excel, PDF, LibreOffice">' + ["microsoft-word", "microsoft-excel", "pdf", "libreoffice"].map(function (b) { return SP.logo(b, 26); }).join("") + "</span>" +
       '<span class="xt-fmts">' + ["DOCX", "PDF", "XLSX", "XLS", "CSV", "TXT", "MD", "ODT", "ODS"].concat(aiOn() ? ["JPG", "PNG"] : []).map(function (x) { return "<i>" + x + "</i>"; }).join("") + "</span></label>" +
       '<div class="xt-side">' +
       (aiOn() ? '<div class="xt-ai-on">' + ico("sparkles", 16) + "<div><b>AI: " + esc(SP.ai.modelName()) + '</b><small>czyta treść dokumentów, skany i zdjęcia notatek, sprawdza je i wyciąga zadania</small></div><button class="link" data-ai-set>zmień</button></div>'
         : '<div class="xt-ai-off">' + ico("sparkles", 16) + '<div><b>Tryb podstawowy (reguły)</b><small>Włącz AI (Claude), żeby zadania wyciągał model, który naprawdę rozumie tekst – także skany i zdjęcia.</small></div><button class="btn sm primary" data-ai-set>Włącz AI</button></div>') +
       '<div class="xt-try"><h3>' + ico("sparkles", 15) + 'Wypróbuj na przykładzie</h3>' +
       '<button class="xt-sample" data-sample="notes"><span class="ftile" style="--c:#3b82f6">' + ico("file-text", 16) + '</span><span><b>Notatki ze spotkania</b><small class="muted">osoby, terminy, priorytety, checklisty</small></span></button>' +
-      '<button class="xt-sample" data-sample="book"><span class="ftile" style="--c:#1aae6f">' + ico("spreadsheet", 16) + '</span><span><b>Skoroszyt kontrolera (Excel)</b><small class="muted">zamknięcie miesiąca, faktury, budżet vs wykonanie</small></span></button>' +
+      '<button class="xt-sample" data-sample="book"><span class="ftile ftile-brand" style="--c:#1aae6f">' + SP.logo("microsoft-excel", 18, { alt: "" }) + '</span><span><b>Skoroszyt kontrolera (Excel)</b><small class="muted">zamknięcie miesiąca, faktury, budżet vs wykonanie</small></span></button>' +
       '<button class="link xt-dl-sample" data-dl-sample>' + ico("download", 13) + "Pobierz przykładowy plik Excel</button></div>" +
       '<button class="btn sm xt-paste" data-paste>' + ico("file-text", 15) + "Wklej tekst zamiast pliku</button>" +
       (docs.length ? '<div class="xt-cloud"><h3>' + ico("cloud", 15) + 'Z chmury</h3>' + docs.map(function (f) { return '<button class="xt-cf" data-cloud="' + f.id + '">' + SP.fileTile(f) + "<span>" + esc(f.name) + '</span><small class="muted">' + SP.fmtSize(f.size) + "</small></button>"; }).join("") + "</div>" : "") +

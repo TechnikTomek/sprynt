@@ -165,6 +165,7 @@
     if (type === "list") items.push({ label: "Pola niestandardowe…", icon: "spreadsheet", run: function () { SP.manageFields(id); } });
     items.push({ label: "Eksportuj zadania (CSV)", icon: "download", run: function () { SP.exportCSV(type, id); } });
     items.push({ label: "Eksportuj do kalendarza (.ics)", icon: "calendar", run: function () { SP.exportICS(type, id); } });
+    items.push({ html: '<span class="pm-logo">' + SP.logo("google-calendar", 16, { alt: "" }) + "</span><span>Jak dodać do Google, Outlooka, Apple…</span>", run: function () { SP.icsHelp(); } });
     if (type === "space") items.push({ label: "Sprinty przestrzeni", icon: "gauge", run: function () { SP.views.sprints.scope = id; location.hash = "#/sprints"; } });
     if (type === "space") items.push({ label: "Czat przestrzeni", icon: "message-square", run: function () { location.hash = "#/chat/" + id; } });
     items.push("-", { label: "Usuń " + label, icon: "trash", danger: true, run: function () {
