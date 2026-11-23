@@ -303,6 +303,7 @@
       { label: "Skróty klawiszowe", icon: "keyboard", run: function () { SP.showShortcuts(); } },
     ].concat(window.SPInstall && !SPInstall.standalone() ? [{ label: SPInstall.available() ? "Zainstaluj aplikację" : "Jak zainstalować aplikację?", icon: "download", run: function () {
       if (SPInstall.available()) SPInstall.prompt().then(function (ok) { if (ok) SP.toast("Sprynt zainstalowany – znajdziesz go wśród aplikacji"); });
+      else if (SP.installHelp) SP.installHelp();
       else SP.confirm("Zainstaluj Sprynt jako aplikację", SPInstall.howTo() + "\n\nPo instalacji Sprynt otwiera się w osobnym oknie i działa także bez internetu.", "Rozumiem");
     } }] : []).concat([
       "-",

@@ -636,7 +636,8 @@
       '<label class="xt-drop" tabindex="0"><input type="file" hidden accept=".txt,.md,.markdown,.csv,.tsv,.docx,.odt,.pdf,.html,.htm,.xlsx,.xlsm,.xls,.ods' + (aiOn() ? ",.png,.jpg,.jpeg,.webp,.gif" : "") + '" />' +
       '<span class="xt-drop-ico">' + ico("file-dropzone", 40) + '</span><b>Upuść plik albo kliknij, żeby wybrać</b>' +
       '<span class="muted">Notatki ze spotkania, brief, specyfikacja, protokół, checklista zamknięcia miesiąca, lista faktur, budżet…</span>' +
-      '<span class="xt-brands" aria-label="Word, Excel, PDF, LibreOffice">' + ["microsoft-word", "microsoft-excel", "pdf", "libreoffice"].map(function (b) { return SP.logo(b, 26); }).join("") + "</span>" +
+      '<span class="xt-brands" aria-label="Word, Excel, PDF, LibreOffice, Google Docs, Google Sheets, Notion, Obsidian">' + ["microsoft-word", "microsoft-excel", "pdf", "libreoffice", "google-docs", "google-sheets", "notion", "obsidian"].map(function (b) { return SP.logo(b, 24); }).join("") + "</span>" +
+      '<small class="muted xt-brand-hint">Google Docs i Arkusze: Plik → Pobierz (.docx / .xlsx). Notion i Obsidian: eksport do Markdown (.md).</small>' +
       '<span class="xt-fmts">' + ["DOCX", "PDF", "XLSX", "XLS", "CSV", "TXT", "MD", "ODT", "ODS"].concat(aiOn() ? ["JPG", "PNG"] : []).map(function (x) { return "<i>" + x + "</i>"; }).join("") + "</span></label>" +
       '<div class="xt-side">' +
       (aiOn() ? '<div class="xt-ai-on">' + ico("sparkles", 16) + "<div><b>AI: " + esc(SP.ai.modelName()) + '</b><small>czyta treść dokumentów, skany i zdjęcia notatek, sprawdza je i wyciąga zadania</small></div><button class="link" data-ai-set>zmień</button></div>'

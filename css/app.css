@@ -432,7 +432,7 @@ kbd { font: 500 11px/1 var(--font); padding: 3px 5px; border-radius: 5px; backgr
 .pm-item:hover { background: var(--hover); }
 .pm-item.active { background: var(--brand-soft); }
 .pm-item.danger { color: var(--danger); }
-.pm-item > span:not(.av):not(.st-dot):not(.prio):not(.tag):not(.pm-check):not(.pm-logo) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pm-item > span:not(.av):not(.st-dot):not(.prio):not(.tag):not(.pm-check):not(.pm-logo):not(.pm-logos) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .pm-item small { font-size: 12px; }
 .pm-check { margin-left: auto; color: var(--brand); }
 .pm-sep { height: 1px; background: var(--line); margin: 4px 2px; }
@@ -1929,3 +1929,15 @@ tr:hover button.ts-cell span, button.ts-cell:focus-visible span { opacity: 1; }
 .hs-next { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .hs-next small { flex-basis: 100%; }
 .ib-row.ib-link { cursor: pointer; }
+/* logotypy – dodatki */
+.pm-logos { display: inline-flex; gap: 4px; margin-left: auto; padding-left: 8px; opacity: .85; }
+.pm-item > .pm-logos { flex: none; }
+.xt-brands { flex-wrap: wrap; max-width: 330px; margin-left: auto; margin-right: auto; }
+.xt-brand-hint { display: block; max-width: 360px; margin: 2px auto 0; font-size: 11.5px; text-align: center; }
+.ai-console { display: inline-flex; align-items: center; gap: 4px; }
+.rn-md { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 10px 2px 0; font-size: 12.5px; }
+.rn-b { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
+.inst-help { width: min(580px, 100%); }
+.ics-i.cur { border-color: color-mix(in srgb, var(--brand) 50%, transparent); background: var(--brand-soft); }
+.inst-cur { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--brand); vertical-align: 1px; }
+.inst-os { display: inline-flex; gap: 5px; flex: none; opacity: .8; }

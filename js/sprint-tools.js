@@ -175,7 +175,7 @@
     var S = X.aiShell("Notatki wydania · " + sp.name, "Changelog z " + pl(done.length, "ukończonego zadania", "ukończonych zadań", "ukończonych zadań") + " – do wysłania zespołowi albo klientom.", "megaphone", { noGo: true, cls: "rn" });
     var N = notesLocal(sp, done), aud = "team";
     S.info.innerHTML = '<div class="seg" role="group" aria-label="Odbiorca"><button data-aud="team" aria-pressed="true">Dla zespołu</button><button data-aud="client" aria-pressed="false">Dla klienta</button></div><span class="rn-st muted">Wersja podstawowa – pogrupowana po listach.</span>';
-    function draw() { S.body.innerHTML = '<article class="rn-doc">' + notesHTML(N) + "</article>"; S.meta.textContent = N.local ? "" : "AI · " + X.modelLabel(N.model); }
+    function draw() { S.body.innerHTML = '<article class="rn-doc">' + notesHTML(N) + '</article><p class="muted rn-md">' + SP.logo("markdown", 16, { alt: "" }) + "„Kopiuj” daje Markdown – wkleisz go do: " + ["github", "notion", "obsidian", "slack"].map(function (b) { return '<span class="rn-b">' + SP.logo(b, 14, { alt: "" }) + SP.BRANDS[b] + "</span>"; }).join("") + "</p>"; S.meta.textContent = N.local ? "" : "AI · " + X.modelLabel(N.model); }
     S.acts.innerHTML = '<button class="btn sm" data-doc>' + ico("file-text", 14) + 'Zapisz w Dokumentach</button><button class="btn sm" data-copy>' + ico("copy", 14) + 'Kopiuj</button><button class="btn sm" data-send>' + ico("send-horizontal", 14) + "Wyślij</button>" +
       '<button class="btn sm magic" data-ai>' + ico("sparkles", 14) + "<span>" + (X.aiOn() ? "Napisz z AI" : "Włącz AI") + "</span></button>";
     SP.hydrateIcons(S.bg);

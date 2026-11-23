@@ -126,7 +126,8 @@ Nie używamy nazwy, logo ani grafik ClickUp.
 ## Logotypy, wysyłanie, strona startowa (dodane 2026-11-23, trzecia partia)
 
 - **Logotypy marek** z MCP thesvg (`kind: "brand"`) w `img/logos/*.svg`, wstawiane przez `SP.logo(slug, size, {alt, cls})` z `js/brands.js` (ładowany zaraz po `icons.js` w `app.html` i `index.html`). Apple ma dwie wersje – CSS `.logo-on-light/.logo-on-dark` wg `data-theme`. Lista i zasady: `icons/README.md`. Ikony interfejsu nadal tylko z `js/icons.js`.
-- `SP.logoSlugFor(name)` → logo Word/Excel/PDF/LibreOffice dla pliku (kafelki `SP.fileTile` w Chmurze i w „Zadaniach z pliku”).
+- **Druga partia logotypów:** Google Docs/Sheets, Notion, Obsidian, Markdown, Microsoft Teams, Slack, GitHub, Anthropic, Chrome/Edge/Safari/Firefox, Windows/Android/Linux. `SP.installHelp()` – okno instalacji PWA z logotypami przeglądarek (bieżąca na górze), wołane z menu konta zamiast tekstowego `SP.confirm`. Strona startowa: Integracje w 4 grupach (AI, dokumenty i notatki, kalendarze, komunikacja), pasek „Działa wszędzie”, link „Kod na GitHubie” w stopce, FAQ o przenoszeniu zadań (Notion/Obsidian → Markdown, arkusze, Word/Docs).
+- `SP.logoSlugFor(name)` → logo Word/Excel/PDF/LibreOffice/Markdown dla pliku (kafelki `SP.fileTile` w Chmurze i w „Zadaniach z pliku”).
 - `SP.shareText(anchor, {subject, text, url?})` – menu „Wyślij przez”: WhatsApp (`wa.me`), Telegram (`t.me/share`), Gmail (`mail.google.com/mail/?view=cm`), Outlook w sieci (`outlook.office.com/mail/deeplink/compose`), `mailto:`, `navigator.share`, kopiowanie; tekst > 1800 znaków jest skracany. Używane w stand-upie („Wyślij”), menu ⋯ sprintu („Wyślij podsumowanie…”) i podsumowaniu tygodnia.
 - Zaproszenia: kanały Gmail i Outlook (z adresatem) + prawdziwe logo WhatsApp/Telegram.
 - `SP.icsHelp(fileName, n)` – okno „Dodaj terminy do kalendarza” (Google, Outlook, Apple); raz na sesję po eksporcie `.ics`, zawsze z menu przestrzeni/folderu/listy.

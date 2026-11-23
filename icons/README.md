@@ -92,6 +92,12 @@ Logotypy pochodzą z tego samego serwera MCP **thesvg**, ale `kind: "brand"` (wa
 | `claude.svg` | Ustawienia → AI, strona startowa (Sprinty, Integracje) |
 | `microsoft-word.svg`, `microsoft-excel.svg`, `pdf.svg`, `libreoffice.svg` | Zadania z pliku, kafelki plików w Chmurze (`SP.logoSlugFor`), strona startowa |
 | `google-calendar.svg`, `microsoft-outlook.svg`, `apple-light.svg` / `apple-dark.svg` | Okno „Dodaj terminy do kalendarza” (`SP.icsHelp`), menu eksportu, strona startowa |
-| `gmail.svg`, `microsoft-outlook.svg`, `whatsapp.svg`, `telegram.svg` | Zaproszenia, menu „Wyślij przez…” (`SP.shareText`), strona startowa |
+| `gmail.svg`, `microsoft-outlook.svg`, `whatsapp.svg`, `telegram.svg`, `microsoft-teams.svg` | Zaproszenia, menu „Wyślij przez…” (`SP.shareText`, Teams przez `teams.microsoft.com/share`), strona startowa |
+| `google-docs.svg`, `google-sheets.svg`, `notion-light/dark.svg`, `obsidian.svg`, `markdown-light/dark.svg` | „Zadania z pliku” (z podpowiedzią, jak wyeksportować), pliki `.md` w Chmurze, notatki wydania, strona startowa |
+| `slack.svg`, `github-light/dark.svg` | „Kopiuj tekst” w menu wysyłania, notatki wydania (Markdown), strona startowa, stopka (link do repozytorium) |
+| `anthropic-light/dark.svg` | Ustawienia → AI (link do konsoli), strona startowa |
+| `chrome.svg`, `edge.svg`, `safari.svg`, `firefox.svg`, `windows.svg`, `android.svg`, `linux.svg` (+ `apple`) | Okno „Zainstaluj Sprynt jako aplikację” (`SP.installHelp`), pasek „Działa wszędzie” na stronie startowej |
+
+Marki z wersją na jasne i ciemne tło (`THEMED` w `js/brands.js`): `apple`, `github`, `anthropic`, `markdown`, `notion` – pliki `<slug>-light.svg` (ciemny znak) i `<slug>-dark.svg` (jasny znak). Notion: `-light` to wariant `mono`, `-dark` to `default` (biała kostka).
 
 Nazwy i logotypy należą do właścicieli – używamy ich tylko do wskazania zgodności (napis pod sekcją Integracje). Nie dodajemy logo ClickUp.
